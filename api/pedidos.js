@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization');
 
   // Lida com requisições OPTIONS (preflight requests) que os navegadores fazem para CORS
-  if (req.method === 'OPTIONS') {
+  if (req.method === 'OPTIONS') { 
     return res.status(200).end();
   }
   // --- Fim da Configuração CORS ---
