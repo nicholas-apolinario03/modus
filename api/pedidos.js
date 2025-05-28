@@ -1,17 +1,15 @@
 export default async function handler(req, res) {
-  // --- Configuração CORS ---
-  // Permite requisições do seu domínio do GitHub Pages
-  res.setHeader('Access-Control-Allow-Origin', 'https://nicholas-apolinario03.github.io);
-  // Permite os métodos HTTP que você pode usar (GET, POST, OPTIONS, etc.)
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-  // Permite os cabeçalhos que o navegador pode enviar
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization');
+ const express = require('express');
+const app = express();
+require('dotenv').config();
+const cors = require('cors');
+app.use(express.json());
+app.use(express.json());
+app.use(cors());
 
-  // Lida com requisições OPTIONS (preflight requests) que os navegadores fazem para CORS
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  // --- Fim da Configuração CORS ---
+// Middleware para servir arquivos estáticos
+app.use(express.static('public'));
+app.use(cors());
 
   const { order_id } = req.query;
 
