@@ -1,4 +1,3 @@
-export default async function handler(req, res) {
  const express = require('express');
 const app = express();
 require('dotenv').config();
@@ -10,6 +9,8 @@ app.use(cors());
 // Middleware para servir arquivos estáticos
 app.use(express.static('public'));
 app.use(cors());
+export default async function handler(req, res) {
+
 
   const { order_id } = req.query;
 
