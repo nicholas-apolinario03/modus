@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/pedido.py": {
+      "runtime": "python3.9"
+    }
+  }
+}
