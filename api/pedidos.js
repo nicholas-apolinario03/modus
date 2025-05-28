@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Parâmetro 'order_id' obrigatório." });
   }
 
-  const access_token = "APP_USR-3704242181199025-052809-ef0f7bd5efacd9e0df113aa937612b1c-1357030258";
+  const access_token = 'APP_USR-3704242181199025-052809-ef0f7bd5efacd9e0df113aa937612b1c-1357030258';
 
   if (!access_token) {
     return res.status(500).json({ error: "Access token não configurado." });
