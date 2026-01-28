@@ -1,7 +1,7 @@
 import axios from "axios";
 
 function setCors(res) {
-  res.setHeader("Access-Control-Allow-Origin", "https://nicholas-apolinario03.github.io");
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
