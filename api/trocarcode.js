@@ -1,14 +1,15 @@
 export default async function handler(req, res) {
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+ const { code } = req.body;
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método não permitido" });
-  }
-  const { code } = req.body;
+    console.log("Code recebido:", code);
 
-  console.log("Code recebido:", code);
+    if (req.method === "OPTIONS") {
+        return res.status(200).end();
+    }
+
+    if (req.method !== "POST") {
+        return res.status(405).json({ error: "Método não permitido" , code});
+    }
   return res.status(200).json({ ok: true });
 }
