@@ -1,9 +1,5 @@
 export default async function handler(req, res) {
 
- const { code } = req.body;
-
-    console.log("Code recebido:", code);
-
     if (req.method === "OPTIONS") {
         return res.status(200).end();
     }
