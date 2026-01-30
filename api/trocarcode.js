@@ -1,5 +1,9 @@
 export default async function handler(req, res) {
+    const { code } = req.body;
 
+    if (!code) {
+        return res.status(400).json({ error: "Code não informado" });
+}
     if (req.method === "OPTIONS") {
         return res.status(200).end();
     }
