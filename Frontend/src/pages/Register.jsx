@@ -1,33 +1,43 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-function Register() {
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+export default function Register() {
+  const [user, setUser] = useState({ nome: '', email: '', senha: '' });
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, email, senha })
-      });
-      const data = await res.json();
-      console.log(data);
-    } catch (err) {
-      console.error(err);
-    }
-  }
+    
+    // Conecta com o seu index.js (backend) que roda na porta 3000
+    const response = await fetch('http://localhost:3000/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user)
+    });
+
+    const data = await response.json();
+    alert(data.message || data.error);
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input placeholder="Nome" value={nome} onChange={e => setNome(e.target.value)} />
-      <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-      <input placeholder="Senha" value={senha} onChange={e => setSenha(e.target.value)} />
-      <button type="submit">Registrar</button>
-    </form>
+    <div className="register-container">
+      <h2>Criar Conta</h2>
+      <form onSubmit={handleSubmit}>
+        <input 
+          type="text" 
+          placeholder="Nome" 
+          onChange={(e) => setUser({...user, nome: e.target.value})} 
+        />
+        <input 
+          type="email" 
+          placeholder="Email" 
+          onChange={(e) => setUser({...user, email: e.target.value})} 
+        />
+        <input 
+          type="password" 
+          placeholder="Senha" 
+          onChange={(e) => setUser({...user, senha: e.target.value})} 
+        />
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
   );
 }
-
-export default Register;
