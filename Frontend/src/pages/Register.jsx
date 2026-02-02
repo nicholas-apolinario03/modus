@@ -8,7 +8,7 @@ function Register() {
     async function handlerSubmit(e) {
 
         e.preventDefault();
-        fetch("http://localhost:3000/api/register", {
+        fetch("https://modus-three.vercel.app/api/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
