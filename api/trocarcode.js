@@ -45,4 +45,8 @@ export default async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ error: "Erro interno", detalhe: err.message });
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 4b2f52fc6adb7f0e1a656f446bfc7e724f0472e6
