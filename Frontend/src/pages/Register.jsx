@@ -8,7 +8,7 @@ function Register() {
     async function handlerSubmit(e) {
 
         try {
-            const response = await fetch("http://localhost:3000/api/register", {
+            const response = await fetch("https://modus-three.vercel.app/api/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
