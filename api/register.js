@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { db } from "./bd.js";
 
 export default async function handler(req, res) {
-
+ console.log("API /register chamada");
   // CORS básico
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
