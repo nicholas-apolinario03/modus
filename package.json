@@ -4,26 +4,20 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "cd frontend && npm install && npm run build",
+    "install-all": "npm install && cd frontend && npm install"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nicholas-apolinario03/modus.git"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/nicholas-apolinario03/modus/issues"
-  },
-  "homepage": "https://github.com/nicholas-apolinario03/modus#readme",
-  "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "mysql2": "^3.16.2",
     "pg": "^8.18.0"
   }
 }
