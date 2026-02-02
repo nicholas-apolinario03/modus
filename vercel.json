@@ -1,4 +1,11 @@
 {
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/Frontend/index.html"
+    }
+  ],
+  
   "headers": [
     {
       "source": "/api/(.*)",
@@ -9,4 +16,6 @@
       ]
     }
   ]
+
+  
 }
