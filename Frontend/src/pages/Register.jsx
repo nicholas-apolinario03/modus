@@ -6,7 +6,7 @@ function Register() {
     const [nome, setNome] = useState("");
 
     async function handlerSubmit(e) {
-
+           e.preventDefault();
         try {
             const response = await fetch("https://modus-three.vercel.app/api/register", {
                 method: "POST",
