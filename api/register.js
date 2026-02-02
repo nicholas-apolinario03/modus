@@ -2,8 +2,8 @@ import bcrypt from "bcryptjs";
 import { db } from "./bd.js";
 
 export default async function handler(req, res) {
- console.log("API /register chamada");
-  // CORS básico
+ res.status(200).json({ message: "API funcionando" });
+  /*
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -47,4 +47,5 @@ export default async function handler(req, res) {
     console.error(err);
     return res.status(500).json({ error: "Erro interno" });
   }
+    */
 }
