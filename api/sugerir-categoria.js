@@ -7,15 +7,19 @@ export default async function handler(req, res) {
     try {
         const accessToken = await garantirTokenValido(usuarioId);
 
-        // API de predição do Mercado Livre
         const response = await axios.get(
             `https://api.mercadolibre.com/sites/MLB/category_predictor/predict?title=${encodeURIComponent(titulo)}`,
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
-        // Retorna a categoria com maior probabilidade
-        res.status(200).json(response.data);
+        // O ML retorna um Array de sugestões. Vamos pegar a primeira (index 0)
+        if (response.data && response.data.length > 0) {
+            res.status(200).json(response.data[0]); 
+        } else {
+            res.status(404).json({ error: "Nenhuma categoria encontrada" });
+        }
     } catch (error) {
+        console.error("Erro na predição:", error.response?.data || error.message);
         res.status(500).json({ error: "Erro ao prever categoria" });
     }
 }

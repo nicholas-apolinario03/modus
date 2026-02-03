@@ -5,35 +5,38 @@ export default function NovoProduto() {
     const user = JSON.parse(localStorage.getItem('user'));
     const navigate = useNavigate();
     const [sugestao, setSugestao] = useState(null);
+    const [carregandoCategoria, setCarregandoCategoria] = useState(false);
 
     const [produto, setProduto] = useState({
         titulo: '',
         preco: '',
         quantidade: 1,
-        categoria: 'MLB1234', // Sugiro deixar uma padrão por enquanto
+        categoria: '', 
         condicao: 'new'
     });
 
-
     const buscarSugestaoCategoria = async () => {
         if (produto.titulo.length < 5) return;
-
+        
+        setCarregandoCategoria(true);
         try {
-            const res = await fetch(`/api/sugerir-categoria?titulo=${produto.titulo}&usuarioId=${user.id}`);
+            const res = await fetch(`/api/sugerir-categoria?titulo=${encodeURIComponent(produto.titulo)}&usuarioId=${user.id}`);
             const data = await res.json();
 
             if (data.id) {
                 setSugestao(data.name);
-                setProduto({ ...produto, categoria: data.id });
+                setProduto(prev => ({ ...prev, categoria: data.id }));
             }
         } catch (err) {
             console.error("Erro ao buscar categoria");
+        } finally {
+            setCarregandoCategoria(false);
         }
     };
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
         try {
             const res = await fetch('/api/criar-produto', {
                 method: 'POST',
@@ -43,7 +46,10 @@ export default function NovoProduto() {
 
             if (res.ok) {
                 alert("Anúncio criado com sucesso!");
-                navigate('/dashboard'); // Volta para o dashboard para ver o novo item
+                navigate('/dashboard');
+            } else {
+                const erro = await res.json();
+                alert("Erro ao criar: " + (erro.error || "Verifique os dados"));
             }
         } catch (err) {
             console.error("Erro ao criar:", err);
@@ -51,41 +57,79 @@ export default function NovoProduto() {
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', color: 'white' }}>
             <h2>Anunciar Novo Produto</h2>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <label>Título do Produto</label>
                     <input
                         type="text"
                         placeholder="Ex: iPhone 13 Pro Max 128GB"
-                        onBlur={buscarSugestaoCategoria} // Busca quando o usuário sai do campo
+                        required
+                        onBlur={buscarSugestaoCategoria}
                         onChange={e => setProduto({ ...produto, titulo: e.target.value })}
+                        style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                     />
-                    {sugestao && (
-                        <span style={{ fontSize: '12px', color: '#00a650' }}>
-                            Categoria sugerida: <strong>{sugestao}</strong>
-                        </span>
-                    )}
+                    
+                    <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#202020', borderRadius: '4px', border: '1px solid #444' }}>
+                        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
+                            Categoria Selecionada:
+                        </label>
+
+                        {carregandoCategoria ? (
+                            <span style={{ color: '#aaa' }}>Buscando melhor categoria...</span>
+                        ) : sugestao ? (
+                            <span style={{ color: '#00a650', fontWeight: '500' }}>
+                                ✅ {sugestao}
+                                <small style={{ color: '#888', marginLeft: '5px' }}>({produto.categoria})</small>
+                            </span>
+                        ) : (
+                            <span style={{ color: '#888', fontStyle: 'italic' }}>
+                                Digite o título e clique fora para sugerir...
+                            </span>
+                        )}
+                    </div>
                 </div>
-                
+
                 <input
-                    type="number" placeholder="Preço" required
+                    type="number" placeholder="Preço (Ex: 1500)" required
                     onChange={e => setProduto({ ...produto, preco: e.target.value })}
+                    style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
                 <input
-                    type="number" placeholder="Quantidade" required
+                    type="number" placeholder="Quantidade em estoque" required
                     onChange={e => setProduto({ ...produto, quantidade: e.target.value })}
+                    style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
-                <select onChange={e => setProduto({ ...produto, condicao: e.target.value })}>
+                
+                <label>Condição</label>
+                <select 
+                    onChange={e => setProduto({ ...produto, condicao: e.target.value })}
+                    style={{ padding: '8px', borderRadius: '4px' }}
+                >
                     <option value="new">Novo</option>
                     <option value="used">Usado</option>
                 </select>
 
-                <button type="submit" style={{ padding: '10px', background: '#3483fa', color: 'white', border: 'none', borderRadius: '4px' }}>
-                    Publicar no Mercado Livre
+                <button 
+                    type="submit" 
+                    disabled={!produto.categoria || carregandoCategoria}
+                    style={{ 
+                        padding: '12px', 
+                        background: !produto.categoria ? '#555' : '#3483fa', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px',
+                        cursor: !produto.categoria ? 'not-allowed' : 'pointer'
+                    }}
+                >
+                    {carregandoCategoria ? 'Aguarde...' : 'Publicar no Mercado Livre'}
                 </button>
-                <button type="button" onClick={() => navigate('/dashboard')}>Cancelar</button>
+                
+                <button type="button" onClick={() => navigate('/dashboard')} style={{ background: 'transparent', color: '#888', border: 'none', cursor: 'pointer' }}>
+                    Cancelar
+                </button>
             </form>
         </div>
     );
