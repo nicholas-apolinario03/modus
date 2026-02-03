@@ -7,8 +7,8 @@ export default function Dashboard() {
 
     const [temVinculoML, setTemVinculoML] = useState(true); // Começa true para evitar o botão "piscar"
     const [carregandoML, setCarregandoML] = useState(true);
-    
-   useEffect(() => {
+
+    useEffect(() => {
         // Segurança básica que você já tinha
         if (!token || !user) {
             window.location.href = '/login';
@@ -27,8 +27,9 @@ export default function Dashboard() {
     }, [token, user]);
 
     const verificarStatusML = async () => {
+        if (!user?.id) return; // Se não tiver ID, nem tenta buscar
+
         try {
-            // Rota que você vai criar para checar se o user tem tokens no banco
             const res = await fetch(`/api/status-ml?id=${user.id}`);
             const data = await res.json();
             setTemVinculoML(data.conectado);
@@ -78,7 +79,7 @@ export default function Dashboard() {
                 ) : !temVinculoML ? (
                     <div style={{ background: '#fff3cd', padding: '15px', borderRadius: '8px' }}>
                         <p>Sua conta ainda não está vinculada ao Mercado Livre.</p>
-                        <a 
+                        <a
                             id="button_ml"
                             className="btn-ml"
                             href="https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=3704242181199025&redirect_uri=https://modus-three.vercel.app/dashboard"
