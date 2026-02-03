@@ -7,6 +7,7 @@ export default function Dashboard() {
 
     const [temVinculoML, setTemVinculoML] = useState(true); // Começa true para evitar o botão "piscar"
     const [carregandoML, setCarregandoML] = useState(true);
+    const [produtos, setProdutos] = useState([]);
 
     useEffect(() => {
         // Segurança básica que você já tinha
@@ -25,6 +26,25 @@ export default function Dashboard() {
             verificarStatusML();
         }
     }, [token, user]);
+
+
+    useEffect(() => {
+        // Só busca produtos se estiver conectado ao ML e tiver o ID do usuário
+        if (temVinculoML && user?.id) {
+            carregarProdutos();
+        }
+    }, [temVinculoML, user?.id]);
+
+    const carregarProdutos = async () => {
+        try {
+            const res = await fetch(`/api/meus-produtos?usuarioId=${user.id}`);
+            const data = await res.json();
+            setProdutos(data);
+        } catch (err) {
+            console.error("Erro ao carregar lista de produtos:", err);
+        }
+    };
+
 
     const verificarStatusML = async () => {
         if (!user?.id) return; // Se não tiver ID, nem tenta buscar
@@ -91,7 +111,20 @@ export default function Dashboard() {
                     <p style={{ color: 'green' }}>✅ Sua conta está integrada ao Mercado Livre.</p>
                 )}
             </div>
-
+            <div className="lista-produtos" style={{ marginTop: '20px' }}>
+                <h3>Seus Anúncios no Mercado Livre</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
+                    {produtos.map(prod => (
+                        <div key={prod.id} style={{ border: '1px solid #ddd', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
+                            <img src={prod.imagem} alt={prod.titulo} style={{ maxWidth: '100px' }} />
+                            <h4 style={{ fontSize: '14px', margin: '10px 0' }}>{prod.titulo}</h4>
+                            <p>R$ {prod.preco}</p>
+                            <a href={prod.link} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#3483fa' }}>Ver no ML</a>
+                        </div>
+                    ))}
+                    {produtos.length === 0 && <p>Nenhum produto encontrado.</p>}
+                </div>
+            </div>
             <br />
             <button onClick={handleLogout}>Sair</button>
         </div>
