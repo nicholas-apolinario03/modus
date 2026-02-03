@@ -1,16 +1,23 @@
 import axios from 'axios';
 import { garantirTokenValido } from './utils/refresh-ml.js';
+import { db } from './bd.js'; // Importe o banco aqui
 
 export default async function handler(req, res) {
     const { usuarioId } = req.query;
 
     try {
-        // 1. Garante que o token está atualizado
         const accessToken = await garantirTokenValido(usuarioId);
 
-        // 2. Busca os IDs dos anúncios do usuário
-        // O ML retorna primeiro uma lista de IDs (ex: MLB12345)
-        const buscaIds = await axios.get(`https://api.mercadolibre.com/users/me/items/search`, {
+        // 1. Buscar o ID do Mercado Livre (user_id_ml) que salvamos na tabela
+        const result = await db.query('SELECT user_id_ml FROM tokens_ml WHERE usuario_id = $1', [usuarioId]);
+        const userIdMl = result.rows[0]?.user_id_ml;
+
+        if (!userIdMl) {
+            return res.status(400).json({ error: "ID do Mercado Livre não encontrado no banco." });
+        }
+
+        // 2. Usar o ID numérico diretamente na URL em vez de "me"
+        const buscaIds = await axios.get(`https://api.mercadolibre.com/users/${userIdMl}/items/search`, {
             headers: { Authorization: `Bearer ${accessToken}` }
         });
 
