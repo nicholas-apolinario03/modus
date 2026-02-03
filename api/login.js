@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const { email, senha } = req.body;
-  const SECRET = process.env.JWT_SECRET; // Idealmente, coloque no arq.env
+  const SECRET = process.env.JWT_SECRET; 
 
   try {
     const result = await db.query("SELECT * FROM usuarios WHERE email = $1", [email]);
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     if (!senhaValida) return res.status(401).json({ error: "Senha inválida" });
 
     // Gera o Token (Equivalente ao ID da Session)
-    const token = jwt.sign({ id: usuario.id, nome: usuario.nome }, SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: usuario.id, nome: usuario.nome }, SECRET, { expiresIn: '7d' });
 
     return res.status(200).json({ token, user: { nome: usuario.nome, email: usuario.email } });
   } catch (err) {

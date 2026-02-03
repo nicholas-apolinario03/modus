@@ -6,7 +6,7 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Conecta com o seu index.js (backend) que roda na porta 3000
+    // Conecta com o seu backend
     const response = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

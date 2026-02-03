@@ -7,7 +7,7 @@ export default function Login() {
     const handleLogin = async (e) => {
         e.preventDefault();
 
-
+        // Conecta com o seu backend
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -15,9 +15,9 @@ export default function Login() {
         });
 
         const data = await response.json();
-
+        //if pra manter o usuario logado 
         if (data.token) {
-            // Salva no navegador (fica lá mesmo se atualizar a página)
+            // Salva no navegador 
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             // Redireciona para o Dashboard

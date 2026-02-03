@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Register from './pages/Register';
 import Login from './pages/Login'; 
 import Dashboard from './pages/Dashboard';
+import Home from './pages/Home';
 
 function App() {
   return (
@@ -12,7 +13,7 @@ function App() {
          <Route path="/login" element={<Login />} />
          <Route path="/dashboard" element={<Dashboard/>}/>
         {/* Rota inicial */}
-        <Route path="/" element={<h1>Bem-vindo à Modus</h1>} />
+        <Route path="/" element={<Home/>} />
       </Routes>
     </Router>
   );

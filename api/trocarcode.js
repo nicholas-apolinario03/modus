@@ -1,48 +1,52 @@
+import axios from 'axios';
+import { db } from './bd.js';
+
 export default async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).send('Método não permitido');
 
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    const { code, usuarioId } = req.body;
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+    try {
+        // 1. Trocar o CODE pelo Token no Mercado Livre
+        // Importante: use o seu CLIENT_SECRET que está no .env da Vercel
+        const response = await axios.post('https://api.mercadolibre.com/oauth/token', null, {
+            params: {
+                grant_type: 'authorization_code',
+                client_id: '3704242181199025',
+                client_secret: process.env.ML_CLIENT_SECRET, 
+                code: code,
+                redirect_uri: 'https://modus-three.vercel.app/dashboard'
+            },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método não permitido" });
-  }
+        const { access_token, refresh_token, expires_in, user_id: userIdMl } = response.data;
 
-  const { code } = req.body;
+        // 2. Calcular as datas de expiração baseadas no horário atual de SP
+        const expiresAtAccess = new Date(Date.now() + expires_in * 1000); // Geralmente 6h
+        const expiresAtRefresh = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000); // 6 meses (180 dias)
 
-  if (!code) {
-    return res.status(400).json({ error: "Code não informado" });
-  }
+        // 3. Salvar na sua nova tabela tokens_ml
+        // Usamos ON CONFLICT para atualizar caso o usuário já tenha um token salvo
+        const query = `
+            INSERT INTO tokens_ml (usuario_id, access_token, refresh_token, expires_at_access, expires_at_refresh, user_id_ml)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (usuario_id) 
+            DO UPDATE SET 
+                access_token = EXCLUDED.access_token,
+                refresh_token = EXCLUDED.refresh_token,
+                expires_at_access = EXCLUDED.expires_at_access,
+                expires_at_refresh = EXCLUDED.expires_at_refresh,
+                user_id_ml = EXCLUDED.user_id_ml,
+                updated_at = CURRENT_TIMESTAMP;
+        `;
 
-  try {
-    const response = await fetch("https://api.mercadolibre.com/oauth/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        client_id: process.env.CLIENT_ID,
-        client_secret: process.env.CLIENT_SECRET,
-        redirect_uri: process.env.REDIRECT_URI,
-        code
-      })
-    });
+        await db.query(query, [usuarioId, access_token, refresh_token, expiresAtAccess, expiresAtRefresh, userIdMl]);
 
-    const data = await response.json();
+        return res.status(200).json({ message: "Tokens salvos com sucesso!" });
 
-    if (!response.ok) {
-      return res.status(400).json(data);
+    } catch (error) {
+        console.error("Erro no ML:", error.response?.data || error.message);
+        return res.status(500).json({ error: "Erro ao trocar o código do Mercado Livre" });
     }
-
-    return res.status(200).json(data);
-
-  } catch (err) {
-    return res.status(500).json({ error: "Erro interno", detalhe: err.message });
-  }
 }
