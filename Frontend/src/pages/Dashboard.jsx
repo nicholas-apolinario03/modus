@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -134,6 +135,7 @@ export default function Dashboard() {
                 </div>
             </div>
             <br />
+            <Link to='/novo-produto'></Link>
             <button onClick={handleLogout}>Sair</button>
         </div>
     );
