@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     // Gera o Token (Equivalente ao ID da Session)
     const token = jwt.sign({ id: usuario.id, nome: usuario.nome }, SECRET, { expiresIn: '7d' });
 
-    return res.status(200).json({ token, user: { nome: usuario.nome, email: usuario.email } });
+    return res.status(200).json({ token, user: {id:usuario.id, nome: usuario.nome, email: usuario.email } });
   } catch (err) {
     return res.status(500).json({ error: "Erro no login" });
   }
