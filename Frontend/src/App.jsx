@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Register from './pages/Register';
-// import Login from './pages/Login'; 
+import Login from './pages/Login'; 
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
@@ -8,7 +9,8 @@ function App() {
       <Routes>
         {/* Quando o usuário acessar /register, mostra o componente Register */}
         <Route path="/register" element={<Register />} />
-        
+         <Route path="/login" element={<Login />} />
+         <Route path="/dashboard" element={<Dashboard/>}/>
         {/* Rota inicial */}
         <Route path="/" element={<h1>Bem-vindo à Modus</h1>} />
       </Routes>
