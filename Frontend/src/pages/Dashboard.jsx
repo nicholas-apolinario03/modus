@@ -135,7 +135,7 @@ export default function Dashboard() {
                 </div>
             </div>
             <br />
-            <Link to='/novo-produto'></Link>
+            <Link to='/novo-produto'>Novo Produto</Link>
             <button onClick={handleLogout}>Sair</button>
         </div>
     );
