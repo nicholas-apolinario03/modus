@@ -17,10 +17,10 @@ export default async function handler(req, res) {
         const ids = buscaIds.data.results;
 
         if (!ids || ids.length === 0) {
-            return res.status(200).json([]);
+            return res.status(200).json([]); // Retorna vazio se não houver anúncios
         }
 
-        // 3. Busca os detalhes dos produtos (limitando aos 10 primeiros para teste)
+        // Pegue no máximo 10 para testar e garanta que virou uma string limpa
         const idsString = ids.slice(0, 10).join(',');
         const detalhes = await axios.get(`https://api.mercadolibre.com/items?ids=${idsString}`, {
             headers: { Authorization: `Bearer ${accessToken}` }
@@ -38,7 +38,8 @@ export default async function handler(req, res) {
         res.status(200).json(produtosFormatados);
 
     } catch (error) {
-        console.error("Erro ao buscar produtos:", error.message);
-        res.status(500).json({ error: "Erro ao carregar produtos do Mercado Livre" });
+        // Isso vai mostrar o motivo real no log da Vercel (ex: "invalid_token")
+        console.error("Detalhes do erro no ML:", error.response?.data);
+        res.status(500).json({ error: "Erro ao carregar produtos" });
     }
 }
