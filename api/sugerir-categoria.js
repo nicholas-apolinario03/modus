@@ -7,14 +7,20 @@ export default async function handler(req, res) {
     try {
         const accessToken = await garantirTokenValido(usuarioId);
 
+        // A URL correta agora coloca o 'MLB' diretamente no caminho
         const response = await axios.get(
-            `https://api.mercadolibre.com/sites/MLB/category_predictor/predict?title=${encodeURIComponent(titulo)}`,
+            `https://api.mercadolibre.com/sites/MLB/domain_discovery/search?q=${encodeURIComponent(titulo)}`,
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
-        // O ML retorna um Array de sugestões. Vamos pegar a primeira (index 0)
+        // O retorno dessa API é um array de sugestões
         if (response.data && response.data.length > 0) {
-            res.status(200).json(response.data[0]); 
+            // Pegamos o primeiro resultado, que contém 'category_id' e 'category_name'
+            const sugestaoPrincipal = response.data[0];
+            res.status(200).json({
+                id: sugestaoPrincipal.category_id,
+                name: sugestaoPrincipal.category_name
+            });
         } else {
             res.status(404).json({ error: "Nenhuma categoria encontrada" });
         }

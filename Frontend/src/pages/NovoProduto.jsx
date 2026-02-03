@@ -6,6 +6,7 @@ export default function NovoProduto() {
     const navigate = useNavigate();
     const [sugestao, setSugestao] = useState(null);
     const [carregandoCategoria, setCarregandoCategoria] = useState(false);
+    const [urlImagem, setUrlImagem] = useState('');
 
     const [produto, setProduto] = useState({
         titulo: '',
@@ -112,15 +113,32 @@ export default function NovoProduto() {
                     <option value="new">Novo</option>
                     <option value="used">Usado</option>
                 </select>
-                <label>URL da Imagem do Produto</label>
-                
-                <input
-                    type="url"
-                    placeholder="https://exemplo.com/foto.jpg"
-                    required
-                    onChange={e => setProduto({ ...produto, imagem: e.target.value })}
-                    style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <label>URL da Imagem (Obrigatório)</label>
+                    <input
+                        type="url"
+                        placeholder="https://link-da-foto.jpg"
+                        required
+                        onChange={e => {
+                            setUrlImagem(e.target.value);
+                            setProduto({ ...produto, imagem: e.target.value });
+                        }}
+                        style={{ padding: '8px', borderRadius: '4px' }}
+                    />
+
+                    {/* Prévia da Imagem */}
+                    {urlImagem && (
+                        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                            <p style={{ fontSize: '12px' }}>Prévia do anúncio:</p>
+                            <img
+                                src={urlImagem}
+                                alt="Preview"
+                                style={{ maxWidth: '150px', borderRadius: '8px', border: '2px solid #3483fa' }}
+                                onError={() => console.log("Link de imagem inválido")}
+                            />
+                        </div>
+                    )}
+                </div>
                 <button
                     type="submit"
                     disabled={!produto.categoria || carregandoCategoria}
