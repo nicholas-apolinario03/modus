@@ -4,7 +4,7 @@ import { garantirTokenValido } from './utils/refresh-ml.js';
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).send('Método não permitido');
 
-    const { titulo, preco, quantidade, categoria, condicao, usuarioId } = req.body;
+    const { titulo, preco, quantidade, categoria, condicao, usuarioId, imagem } = req.body;
 
     try {
         const accessToken = await garantirTokenValido(usuarioId);
