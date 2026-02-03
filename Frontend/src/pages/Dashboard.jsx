@@ -39,9 +39,17 @@ export default function Dashboard() {
         try {
             const res = await fetch(`/api/meus-produtos?usuarioId=${user.id}`);
             const data = await res.json();
-            setProdutos(data);
+
+            // Verifica se o que chegou é realmente um array antes de salvar
+            if (Array.isArray(data)) {
+                setProdutos(data);
+            } else {
+                console.error("O backend não retornou um array:", data);
+                setProdutos([]); // Força um array vazio para não quebrar o .map()
+            }
         } catch (err) {
             console.error("Erro ao carregar lista de produtos:", err);
+            setProdutos([]);
         }
     };
 
