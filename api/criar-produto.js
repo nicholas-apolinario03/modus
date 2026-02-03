@@ -9,6 +9,7 @@ export default async function handler(req, res) {
     try {
         const accessToken = await garantirTokenValido(usuarioId);
 
+        // Dentro do seu handler, onde você monta o bodyML:
         const bodyML = {
             title: titulo,
             category_id: categoria,
@@ -16,8 +17,12 @@ export default async function handler(req, res) {
             currency_id: 'BRL',
             available_quantity: parseInt(quantidade),
             condition: condicao,
-            listing_type_id: 'bronze', // Tipo de anúncio (Clássico)
-            buying_mode: 'buy_it_now'
+            listing_type_id: 'bronze',
+            buying_mode: 'buy_it_now',
+            // Adicionando a imagem enviada pelo formulário
+            pictures: [
+                { source: imagem }
+            ]
         };
 
         const response = await axios.post('https://api.mercadolibre.com/items', bodyML, {

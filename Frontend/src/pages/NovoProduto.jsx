@@ -11,13 +11,14 @@ export default function NovoProduto() {
         titulo: '',
         preco: '',
         quantidade: 1,
-        categoria: '', 
-        condicao: 'new'
+        categoria: '',
+        condicao: 'new',
+        imagem: ''
     });
 
     const buscarSugestaoCategoria = async () => {
         if (produto.titulo.length < 5) return;
-        
+
         setCarregandoCategoria(true);
         try {
             const res = await fetch(`/api/sugerir-categoria?titulo=${encodeURIComponent(produto.titulo)}&usuarioId=${user.id}`);
@@ -36,7 +37,7 @@ export default function NovoProduto() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         try {
             const res = await fetch('/api/criar-produto', {
                 method: 'POST',
@@ -60,7 +61,7 @@ export default function NovoProduto() {
         <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', color: 'white' }}>
             <h2>Anunciar Novo Produto</h2>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <label>Título do Produto</label>
                     <input
@@ -71,7 +72,7 @@ export default function NovoProduto() {
                         onChange={e => setProduto({ ...produto, titulo: e.target.value })}
                         style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                     />
-                    
+
                     <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#202020', borderRadius: '4px', border: '1px solid #444' }}>
                         <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
                             Categoria Selecionada:
@@ -102,31 +103,39 @@ export default function NovoProduto() {
                     onChange={e => setProduto({ ...produto, quantidade: e.target.value })}
                     style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
-                
+
                 <label>Condição</label>
-                <select 
+                <select
                     onChange={e => setProduto({ ...produto, condicao: e.target.value })}
                     style={{ padding: '8px', borderRadius: '4px' }}
                 >
                     <option value="new">Novo</option>
                     <option value="used">Usado</option>
                 </select>
-
-                <button 
-                    type="submit" 
+                <label>URL da Imagem do Produto</label>
+                
+                <input
+                    type="url"
+                    placeholder="https://exemplo.com/foto.jpg"
+                    required
+                    onChange={e => setProduto({ ...produto, imagem: e.target.value })}
+                    style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                />
+                <button
+                    type="submit"
                     disabled={!produto.categoria || carregandoCategoria}
-                    style={{ 
-                        padding: '12px', 
-                        background: !produto.categoria ? '#555' : '#3483fa', 
-                        color: 'white', 
-                        border: 'none', 
+                    style={{
+                        padding: '12px',
+                        background: !produto.categoria ? '#555' : '#3483fa',
+                        color: 'white',
+                        border: 'none',
                         borderRadius: '4px',
                         cursor: !produto.categoria ? 'not-allowed' : 'pointer'
                     }}
                 >
                     {carregandoCategoria ? 'Aguarde...' : 'Publicar no Mercado Livre'}
                 </button>
-                
+
                 <button type="button" onClick={() => navigate('/dashboard')} style={{ background: 'transparent', color: '#888', border: 'none', cursor: 'pointer' }}>
                     Cancelar
                 </button>
