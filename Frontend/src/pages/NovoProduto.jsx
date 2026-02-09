@@ -24,30 +24,30 @@ export default function NovoProduto() {
     });
 
     // Função que busca o que a categoria exige (Atributos)
-   const buscarRequisitos = async (catId) => {
-    // Verificação de segurança: só busca se tiver o ID do usuário
-    if (!user?.id) {
-        console.error("ID do usuário não encontrado para buscar atributos.");
-        return;
-    }
-
-    try {
-        // Adicionando o usuarioId na query string
-        const res = await fetch(`/api/categoria-detalhes?categoriaId=${catId}&usuarioId=${user.id}`);
-        const data = await res.json();
-
-        if (Array.isArray(data)) {
-            setAtributosRequeridos(data);
-            const iniciais = {};
-            data.forEach(attr => iniciais[attr.id] = "");
-            setValoresAtributos(iniciais);
-        } else {
-            console.error("Erro vindo do backend:", data.error);
+    const buscarRequisitos = async (catId) => {
+        // Verificação de segurança: só busca se tiver o ID do usuário
+        if (!user?.id) {
+            console.error("ID do usuário não encontrado para buscar atributos.");
+            return;
         }
-    } catch (err) {
-        console.error("Erro ao carregar requisitos:", err.message);
-    }
-};
+
+        try {
+            // Adicionando o usuarioId na query string
+            const res = await fetch(`/api/categoria-detalhes?categoriaId=${catId}&usuarioId=${user.id}`);
+            const data = await res.json();
+            console.log("Atributos recebidos do backend:", data); // Adicione esta linha
+            if (Array.isArray(data)) {
+                setAtributosRequeridos(data);
+                const iniciais = {};
+                data.forEach(attr => iniciais[attr.id] = "");
+                setValoresAtributos(iniciais);
+            } else {
+                console.error("Erro vindo do backend:", data.error);
+            }
+        } catch (err) {
+            console.error("Erro ao carregar requisitos:", err.message);
+        }
+    };
 
     const buscarSugestaoCategoria = async () => {
         if (produto.titulo.length < 5) return;
