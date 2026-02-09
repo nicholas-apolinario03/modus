@@ -12,23 +12,20 @@ export default async function handler(req, res) {
 
         // Adicionamos a verificação Array.isArray(attr.tags) para evitar o erro
         // No seu api/categoria-detalhes.js
-        const obrigatorios = response.data.filter(attr => {
-            const temTags = attr.tags && typeof attr.tags === 'object';
+        const atributosProcessados = response.data.map(attr => {
+            const temTags = attr.tags && Array.isArray(attr.tags);
 
-            // Novo Filtro: Pega o que é 'required' OU o que tem relevância 1 (máxima)
-            // OU o que faz parte da hierarquia principal (PARENT_PK / CHILD_PK)
-            const ehEssencial = (
-                (temTags && attr.tags.required) ||
-                attr.relevance === 1 ||
-                ['PARENT_PK', 'CHILD_PK'].includes(attr.hierarchy)
-            );
-
-            const ehCampoManual = ['condition', 'listing_type_id', 'buying_mode'].includes(attr.id);
-
-            return ehEssencial && !ehCampoManual;
+            return {
+                id: attr.id,
+                name: attr.name,
+                values: attr.values,
+                // Criamos uma flag simples para o frontend ler
+                ehObrigatorio: temTags && (attr.tags.includes('required') || attr.tags.includes('fixed')),
+                relevancia: attr.relevance
+            };
         });
 
-        res.status(200).json(obrigatorios);
+        res.status(200).json(atributosProcessados);
     } catch (error) {
         console.error("Erro ao buscar atributos:", error.message);
         res.status(500).json({ error: "Não foi possível carregar os requisitos da categoria." });
