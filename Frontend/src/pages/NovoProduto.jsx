@@ -24,28 +24,30 @@ export default function NovoProduto() {
     });
 
     // Função que busca o que a categoria exige (Atributos)
-    const buscarRequisitos = async (catId) => {
-        try {
-            const res = await fetch(`/api/categoria-detalhes?categoriaId=${catId}`);
-            const data = await res.json();
+   const buscarRequisitos = async (catId) => {
+    // Verificação de segurança: só busca se tiver o ID do usuário
+    if (!user?.id) {
+        console.error("ID do usuário não encontrado para buscar atributos.");
+        return;
+    }
 
-            // AQUI ESTÁ O SEGREDO: Verifica se 'data' é um Array
-            if (Array.isArray(data)) {
-                setAtributosRequeridos(data);
+    try {
+        // Adicionando o usuarioId na query string
+        const res = await fetch(`/api/categoria-detalhes?categoriaId=${catId}&usuarioId=${user.id}`);
+        const data = await res.json();
 
-                const iniciais = {};
-                data.forEach(attr => iniciais[attr.id] = "");
-                setValoresAtributos(iniciais);
-            } else {
-                // Se cair aqui, o backend enviou um erro em formato de objeto
-                console.error("Erro vindo do backend:", data.error);
-                setAtributosRequeridos([]);
-            }
-        } catch (err) {
-            console.error("Erro ao carregar requisitos:", err.message);
-            setAtributosRequeridos([]);
+        if (Array.isArray(data)) {
+            setAtributosRequeridos(data);
+            const iniciais = {};
+            data.forEach(attr => iniciais[attr.id] = "");
+            setValoresAtributos(iniciais);
+        } else {
+            console.error("Erro vindo do backend:", data.error);
         }
-    };
+    } catch (err) {
+        console.error("Erro ao carregar requisitos:", err.message);
+    }
+};
 
     const buscarSugestaoCategoria = async () => {
         if (produto.titulo.length < 5) return;
