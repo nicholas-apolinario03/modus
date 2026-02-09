@@ -12,23 +12,7 @@ export default async function handler(req, res) {
 
         // Adicionamos a verificação Array.isArray(attr.tags) para evitar o erro
         // No seu api/categoria-detalhes.js
-        const obrigatorios = response.data.filter(attr => {
-            const temTags = attr.tags && Array.isArray(attr.tags);
-
-            // Filtro mais amplo: 
-            // Captura o que é 'required' OU o que é 'catalog_required' 
-            // OU atributos muito comuns em eletrônicos como 'BRAND' e 'MODEL'
-            const ehEssencial = temTags && (
-                attr.tags.includes('required') ||
-                attr.tags.includes('catalog_required') ||
-                ['BRAND', 'MODEL'].includes(attr.id)
-            );
-
-            // Continua ignorando campos que já temos no formulário fixo
-            const ehCampoManual = ['condition', 'listing_type_id', 'buying_mode', 'price', 'quantity'].includes(attr.id);
-
-            return ehEssencial && !ehCampoManual;
-        });
+        const obrigatorios = response.data.slice(0, 10);
 
         res.status(200).json(obrigatorios);
     } catch (error) {
