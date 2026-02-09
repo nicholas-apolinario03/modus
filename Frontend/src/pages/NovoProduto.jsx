@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 export default function NovoProduto() {
     const user = JSON.parse(localStorage.getItem('user'));
     const navigate = useNavigate();
-    
+
     // Estados para Categoria e Imagem
     const [sugestao, setSugestao] = useState(null);
     const [carregandoCategoria, setCarregandoCategoria] = useState(false);
@@ -28,14 +28,22 @@ export default function NovoProduto() {
         try {
             const res = await fetch(`/api/categoria-detalhes?categoriaId=${catId}`);
             const data = await res.json();
-            setAtributosRequeridos(data);
-            
-            // Inicializa o objeto de valores para os campos novos
-            const iniciais = {};
-            data.forEach(attr => iniciais[attr.id] = "");
-            setValoresAtributos(iniciais);
+
+            // AQUI ESTÁ O SEGREDO: Verifica se 'data' é um Array
+            if (Array.isArray(data)) {
+                setAtributosRequeridos(data);
+
+                const iniciais = {};
+                data.forEach(attr => iniciais[attr.id] = "");
+                setValoresAtributos(iniciais);
+            } else {
+                // Se cair aqui, o backend enviou um erro em formato de objeto
+                console.error("Erro vindo do backend:", data.error);
+                setAtributosRequeridos([]);
+            }
         } catch (err) {
-            console.error("Erro ao carregar requisitos da categoria", err);
+            console.error("Erro ao carregar requisitos:", err.message);
+            setAtributosRequeridos([]);
         }
     };
 
@@ -73,10 +81,10 @@ export default function NovoProduto() {
             const res = await fetch('/api/criar-produto', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    ...produto, 
+                body: JSON.stringify({
+                    ...produto,
                     atributos: atributosFormatados, // Envia os campos dinâmicos aqui
-                    usuarioId: user.id 
+                    usuarioId: user.id
                 })
             });
 
@@ -135,7 +143,7 @@ export default function NovoProduto() {
                         {atributosRequeridos.map(attr => (
                             <div key={attr.id} style={{ marginBottom: '10px' }}>
                                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '4px' }}>{attr.name}</label>
-                                <input 
+                                <input
                                     type="text"
                                     placeholder={`Informe ${attr.name}`}
                                     required

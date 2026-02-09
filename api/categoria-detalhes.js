@@ -1,21 +1,25 @@
 import axios from 'axios';
+import { garantirTokenValido } from './utils/refresh-ml.js'; // Importe o seu validador
 
 export default async function handler(req, res) {
-    const { categoriaId } = req.query;
+    const { categoriaId, usuarioId } = req.query; // Receba o usuarioId também
 
     try {
-        const response = await axios.get(`https://api.mercadolibre.com/categories/${categoriaId}/attributes`);
-        
-        // Filtramos apenas os atributos obrigatórios que não sejam 'condition' ou 'listing_type'
-        // (pois esses já temos campos fixos no seu formulário)
-        const obrigatorios = response.data.filter(attr => 
-            attr.tags && 
-            attr.tags.includes('required') && 
+        // Algumas categorias exigem autenticação para mostrar detalhes técnicos
+        const accessToken = await garantirTokenValido(usuarioId);
+
+        const response = await axios.get(`https://api.mercadolibre.com/categories/${categoriaId}/attributes`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+
+        const obrigatorios = response.data.filter(attr =>
+            attr.tags && attr.tags.includes('required') &&
             !['condition', 'listing_type_id', 'buying_mode'].includes(attr.id)
         );
 
         res.status(200).json(obrigatorios);
     } catch (error) {
-        res.status(500).json({ error: "Erro ao buscar atributos da categoria" });
+        console.error("Erro no servidor:", error.response?.data || error.message);
+        res.status(500).json({ error: "Falha ao buscar atributos" });
     }
 }
