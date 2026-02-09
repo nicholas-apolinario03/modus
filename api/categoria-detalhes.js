@@ -11,17 +11,23 @@ export default async function handler(req, res) {
         const response = await axios.get(`https://api.mercadolibre.com/categories/${categoriaId}/attributes`);
 
         // Adicionamos a verificação Array.isArray(attr.tags) para evitar o erro
+        // No seu api/categoria-detalhes.js
         const obrigatorios = response.data.filter(attr => {
-            // Verifica se existem tags e se é um array
             const temTags = attr.tags && Array.isArray(attr.tags);
 
-            // Pega o que é 'required' OU 'fixed' (campos técnicos essenciais)
-            const ehObrigatorio = temTags && (attr.tags.includes('required') || attr.tags.includes('fixed'));
+            // Filtro mais amplo: 
+            // Captura o que é 'required' OU o que é 'catalog_required' 
+            // OU atributos muito comuns em eletrônicos como 'BRAND' e 'MODEL'
+            const ehEssencial = temTags && (
+                attr.tags.includes('required') ||
+                attr.tags.includes('catalog_required') ||
+                ['BRAND', 'MODEL'].includes(attr.id)
+            );
 
-            // Ignora campos que já temos fixos no formulário
+            // Continua ignorando campos que já temos no formulário fixo
             const ehCampoManual = ['condition', 'listing_type_id', 'buying_mode', 'price', 'quantity'].includes(attr.id);
 
-            return ehObrigatorio && !ehCampoManual;
+            return ehEssencial && !ehCampoManual;
         });
 
         res.status(200).json(obrigatorios);
