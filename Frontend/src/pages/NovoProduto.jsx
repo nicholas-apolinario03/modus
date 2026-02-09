@@ -144,17 +144,40 @@ export default function NovoProduto() {
                         <h4 style={{ margin: '0 0 10px 0', color: '#3483fa' }}>Informações Obrigatórias:</h4>
                         {atributosRequeridos.map(attr => (
                             <div key={attr.id} style={{ marginBottom: '10px' }}>
-                                <label style={{ display: 'block', fontSize: '13px', marginBottom: '4px' }}>{attr.name}</label>
-                                <input
-                                    type="text"
-                                    placeholder={`Informe ${attr.name}`}
-                                    required
-                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: 'none' }}
-                                    onChange={e => setValoresAtributos({
-                                        ...valoresAtributos,
-                                        [attr.id]: e.target.value
-                                    })}
-                                />
+                                <label style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#3483fa', fontWeight: 'bold' }}>
+                                    {attr.name}
+                                </label>
+
+                                {/* Se o Mercado Livre enviar uma lista de valores, renderizamos um Select */}
+                                {attr.values && attr.values.length > 0 ? (
+                                    <select
+                                        required
+                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #444', backgroundColor: 'white', color: 'black' }}
+                                        onChange={e => setValoresAtributos({
+                                            ...valoresAtributos,
+                                            [attr.id]: e.target.value
+                                        })}
+                                    >
+                                        <option value="">Selecione o(a) {attr.name}</option>
+                                        {attr.values.map(val => (
+                                            <option key={val.id || val.name} value={val.name}>
+                                                {val.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    /* Caso contrário, mantemos o Input de texto padrão */
+                                    <input
+                                        type="text"
+                                        placeholder={`Informe ${attr.name}`}
+                                        required
+                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: 'none', color: 'black' }}
+                                        onChange={e => setValoresAtributos({
+                                            ...valoresAtributos,
+                                            [attr.id]: e.target.value
+                                        })}
+                                    />
+                                )}
                             </div>
                         ))}
                     </div>
