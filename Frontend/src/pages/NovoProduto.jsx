@@ -56,6 +56,7 @@ export default function NovoProduto() {
         try {
             const res = await fetch(`/api/sugerir-categoria?titulo=${encodeURIComponent(produto.titulo)}&usuarioId=${user.id}`);
             const data = await res.json();
+            console.log("Atributos recebidos do backend:", data);
 
             if (data.id) {
                 setSugestao(data.name);
@@ -139,29 +140,49 @@ export default function NovoProduto() {
                 </div>
 
                 {/* --- RENDERIZAÇÃO DOS CAMPOS DINÂMICOS --- */}
-                {atributosRequeridos.map(attr => (
-                    <div key={attr.id} style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', color: 'white' }}>
-                            {attr.name} {attr.ehObrigatorio && <span style={{ color: 'red' }}>*</span>}
-                        </label>
+                {atributosRequeridos.length > 0 && (
+                    <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid #3483fa' }}>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#3483fa' }}>Informações Obrigatórias:</h4>
+                        {atributosRequeridos.map(attr => (
+                            <div key={attr.id} style={{ marginBottom: '10px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#3483fa', fontWeight: 'bold' }}>
+                                    {attr.name}
+                                </label>
 
-                        <input
-                            type="text"
-                            // O segredo está aqui: o HTML só valida se ehObrigatorio for true
-                            required={attr.ehObrigatorio}
-                            placeholder={attr.ehObrigatorio ? "Campo Obrigatório" : "Opcional"}
-                            style={{
-                                width: '100%',
-                                padding: '8px',
-                                border: attr.ehObrigatorio ? '1px solid #3483fa' : '1px solid #555'
-                            }}
-                            onChange={e => setValoresAtributos({
-                                ...valoresAtributos,
-                                [attr.id]: e.target.value
-                            })}
-                        />
+                                {/* Se o Mercado Livre enviar uma lista de valores, renderizamos um Select */}
+                                {attr.values && attr.values.length > 0 ? (
+                                    <select
+                                        required
+                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #444', backgroundColor: 'white', color: 'black' }}
+                                        onChange={e => setValoresAtributos({
+                                            ...valoresAtributos,
+                                            [attr.id]: e.target.value
+                                        })}
+                                    >
+                                        <option value="">Selecione o(a) {attr.name}</option>
+                                        {attr.values.map(val => (
+                                            <option key={val.id || val.name} value={val.name}>
+                                                {val.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    /* Caso contrário, mantemos o Input de texto padrão */
+                                    <input
+                                        type="text"
+                                        placeholder={`Informe ${attr.name}`}
+                                        required
+                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: 'none', color: 'black' }}
+                                        onChange={e => setValoresAtributos({
+                                            ...valoresAtributos,
+                                            [attr.id]: e.target.value
+                                        })}
+                                    />
+                                )}
+                            </div>
+                        ))}
                     </div>
-                ))}
+                )}
 
                 <input
                     type="number" placeholder="Preço (Ex: 1500)" required
