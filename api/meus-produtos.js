@@ -38,6 +38,8 @@ export default async function handler(req, res) {
             id: item.body.id,
             titulo: item.body.title,
             preco: item.body.price,
+            status: item.body.status, 
+            sub_status: item.body.sub_status,
             imagem: item.body.thumbnail,
             link: item.body.permalink
         }));
