@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { garantirTokenValido } from '../utils/refresh-ml.js'; // Importação correta
+import { garantirTokenValido } from './utils/refresh-ml.js'; // Importação correta
 
 export default async function handler(req, res) {
     const { id, usuarioId } = req.query;
