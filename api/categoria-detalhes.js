@@ -12,26 +12,26 @@ export default async function handler(req, res) {
 
         // Adicionamos a verificação Array.isArray(attr.tags) para evitar o erro
         // No seu api/categoria-detalhes.js
-        const atributosProcessados = response.data.map(attr => {
-            const temTags = attr.tags && typeof attr.tags === 'object';
+      const atributosProcessados = response.data.map(attr => {
+    const temTags = attr.tags && typeof attr.tags === 'object';
+    
+    // Regra: PARENT_PK e CHILD_PK são os únicos obrigatórios por padrão
+    // Mantemos as tags explícitas 'required' e 'fixed' por segurança
+    const ehObrigatorio = (
+        ['PARENT_PK', 'CHILD_PK'].includes(attr.hierarchy) ||
+        (temTags && (attr.tags.required || attr.tags.fixed || attr.tags.conditional_required))
+    );
 
-            // Regra: PARENT_PK e CHILD_PK são os únicos obrigatórios por padrão
-            // Mantemos as tags explícitas 'required' e 'fixed' por segurança
-            const ehObrigatorio = (
-                ['PARENT_PK', 'CHILD_PK'].includes(attr.hierarchy) ||
-                (temTags && (attr.tags.required || attr.tags.fixed))
-            );
+    return {
+        id: attr.id,
+        name: attr.name,
+        values: attr.values,
+        hierarchy: attr.hierarchy, // Útil para debug no console
+        ehObrigatorio: ehObrigatorio
+    };
+});
 
-            return {
-                id: attr.id,
-                name: attr.name,
-                values: attr.values,
-                hierarchy: attr.hierarchy, // Útil para debug no console
-                ehObrigatorio: ehObrigatorio
-            };
-        });
-
-        res.status(200).json(atributosProcessados);
+res.status(200).json(atributosProcessados);
     } catch (error) {
         console.error("Erro ao buscar atributos:", error.message);
         res.status(500).json({ error: "Não foi possível carregar os requisitos da categoria." });
