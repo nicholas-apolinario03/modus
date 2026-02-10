@@ -4,13 +4,12 @@ import { useNavigate } from 'react-router-dom';
 export default function NovoProduto() {
     const user = JSON.parse(localStorage.getItem('user'));
     const navigate = useNavigate();
-
-    // Estados para Categoria e Imagem
+    const [mostrarOpcionais, setMostrarOpcionais] = useState(false);
+    
+    // Estados de Controle
     const [sugestao, setSugestao] = useState(null);
     const [carregandoCategoria, setCarregandoCategoria] = useState(false);
     const [urlImagem, setUrlImagem] = useState('');
-
-    // --- NOVOS ESTADOS PARA O FORMULÁRIO DINÂMICO ---
     const [atributosRequeridos, setAtributosRequeridos] = useState([]);
     const [valoresAtributos, setValoresAtributos] = useState({});
 
@@ -23,26 +22,18 @@ export default function NovoProduto() {
         imagem: ''
     });
 
-    // Função que busca o que a categoria exige (Atributos)
-    const buscarRequisitos = async (catId) => {
-        // Verificação de segurança: só busca se tiver o ID do usuário
-        if (!user?.id) {
-            console.error("ID do usuário não encontrado para buscar atributos.");
-            return;
-        }
+    // --- LÓGICA DE BUSCA ---
 
+    const buscarRequisitos = async (catId) => {
+        if (!user?.id) return;
         try {
-            // Adicionando o usuarioId na query string
             const res = await fetch(`/api/categoria-detalhes?categoriaId=${catId}&usuarioId=${user.id}`);
             const data = await res.json();
-            console.log("Atributos recebidos do backend:", data); // Adicione esta linha
             if (Array.isArray(data)) {
                 setAtributosRequeridos(data);
                 const iniciais = {};
                 data.forEach(attr => iniciais[attr.id] = "");
                 setValoresAtributos(iniciais);
-            } else {
-                console.error("Erro vindo do backend:", data.error);
             }
         } catch (err) {
             console.error("Erro ao carregar requisitos:", err.message);
@@ -51,17 +42,13 @@ export default function NovoProduto() {
 
     const buscarSugestaoCategoria = async () => {
         if (produto.titulo.length < 5) return;
-
         setCarregandoCategoria(true);
         try {
             const res = await fetch(`/api/sugerir-categoria?titulo=${encodeURIComponent(produto.titulo)}&usuarioId=${user.id}`);
             const data = await res.json();
-            console.log("Atributos recebidos do backend:", data);
-
             if (data.id) {
                 setSugestao(data.name);
                 setProduto(prev => ({ ...prev, categoria: data.id }));
-                // BUSCA OS CAMPOS OBRIGATÓRIOS ASSIM QUE ACHA A CATEGORIA
                 buscarRequisitos(data.id);
             }
         } catch (err) {
@@ -73,12 +60,14 @@ export default function NovoProduto() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // FORMATANDO OS ATRIBUTOS PARA O PADRÃO DO MERCADO LIVRE
-        const atributosFormatados = Object.keys(valoresAtributos).map(key => ({
-            id: key,
-            value_name: valoresAtributos[key]
-        }));
+        
+        // Filtra atributos vazios para não sujar o envio
+        const atributosFormatados = Object.keys(valoresAtributos)
+            .filter(key => valoresAtributos[key] !== "")
+            .map(key => ({
+                id: key,
+                value_name: valoresAtributos[key]
+            }));
 
         try {
             const res = await fetch('/api/criar-produto', {
@@ -86,7 +75,7 @@ export default function NovoProduto() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...produto,
-                    atributos: atributosFormatados, // Envia os campos dinâmicos aqui
+                    atributos: atributosFormatados,
                     usuarioId: user.id
                 })
             });
@@ -96,158 +85,126 @@ export default function NovoProduto() {
                 navigate('/dashboard');
             } else {
                 const erro = await res.json();
-                alert("Erro ao criar: " + (erro.error || "Verifique os dados técnicos"));
+                alert("Erro ao criar: " + (erro.error || "Verifique os dados"));
             }
         } catch (err) {
             console.error("Erro ao criar:", err);
         }
     };
 
-    return (
-        <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', color: 'white' }}>
-            <h2>Anunciar Novo Produto</h2>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+    // --- SUB-COMPONENTE INTERNO (Para acessar os estados) ---
+    const RenderizarInput = ({ attr, obrigatorio }) => {
+        const estilo = {
+            width: '100%',
+            padding: '10px',
+            borderRadius: '4px',
+            border: obrigatorio ? '1px solid #3483fa' : '1px solid #444',
+            backgroundColor: 'white',
+            color: 'black',
+            marginTop: '5px'
+        };
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        if (attr.values && attr.values.length > 0) {
+            return (
+                <select 
+                    required={obrigatorio}
+                    style={estilo}
+                    value={valoresAtributos[attr.id] || ""}
+                    onChange={e => setValoresAtributos({...valoresAtributos, [attr.id]: e.target.value})}
+                >
+                    <option value="">{obrigatorio ? "Selecione..." : "Não informado"}</option>
+                    {attr.values.map(v => <option key={v.id || v.name} value={v.name}>{v.name}</option>)}
+                </select>
+            );
+        }
+
+        return (
+            <input 
+                type="text"
+                required={obrigatorio}
+                placeholder={obrigatorio ? "Campo obrigatório" : "Ex: Branco, 110v..."}
+                style={estilo}
+                value={valoresAtributos[attr.id] || ""}
+                onChange={e => setValoresAtributos({...valoresAtributos, [attr.id]: e.target.value})}
+            />
+        );
+    };
+
+    return (
+        <div style={{ color: 'white', padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+            <h2>Anunciar Novo Produto</h2>
+            
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {/* Título */}
+                <div>
                     <label>Título do Produto</label>
                     <input
                         type="text"
-                        placeholder="Ex: iPhone 13 Pro Max 128GB"
                         required
                         onBlur={buscarSugestaoCategoria}
                         onChange={e => setProduto({ ...produto, titulo: e.target.value })}
-                        style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black' }}
+                        style={{ width: '100%', padding: '10px', borderRadius: '4px', color: 'black' }}
                     />
-
-                    <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#202020', borderRadius: '4px', border: '1px solid #444' }}>
-                        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
-                            Categoria Selecionada:
-                        </label>
-
-                        {carregandoCategoria ? (
-                            <span style={{ color: '#aaa' }}>Buscando melhor categoria...</span>
-                        ) : sugestao ? (
-                            <span style={{ color: '#00a650', fontWeight: '500' }}>
-                                ✅ {sugestao}
-                                <small style={{ color: '#888', marginLeft: '5px' }}>({produto.categoria})</small>
-                            </span>
-                        ) : (
-                            <span style={{ color: '#888', fontStyle: 'italic' }}>
-                                Digite o título e clique fora para sugerir...
-                            </span>
-                        )}
-                    </div>
+                    {sugestao && <p style={{ color: '#00a650', fontSize: '12px' }}>✅ Categoria: {sugestao}</p>}
                 </div>
 
-                {/* --- RENDERIZAÇÃO DOS CAMPOS DINÂMICOS --- */}
+                {/* Ficha Técnica Dinâmica */}
                 {atributosRequeridos.length > 0 && (
-                    <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid #3483fa' }}>
-                        <h4 style={{ margin: '0 0 10px 0', color: '#3483fa' }}>Informações Obrigatórias:</h4>
-                        {atributosRequeridos.map(attr => (
-                            <div key={attr.id} style={{ marginBottom: '10px' }}>
-                                <label style={{ display: 'block', fontSize: '13px', marginBottom: '4px', color: '#3483fa', fontWeight: 'bold' }}>
-                                    {attr.name}
-                                </label>
-
-                                {/* Se o Mercado Livre enviar uma lista de valores, renderizamos um Select */}
-                                {attr.values && attr.values.length > 0 ? (
-                                    <select
-                                        required
-                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #444', backgroundColor: 'white', color: 'black' }}
-                                        onChange={e => setValoresAtributos({
-                                            ...valoresAtributos,
-                                            [attr.id]: e.target.value
-                                        })}
-                                    >
-                                        <option value="">Selecione o(a) {attr.name}</option>
-                                        {attr.values.map(val => (
-                                            <option key={val.id || val.name} value={val.name}>
-                                                {val.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    /* Caso contrário, mantemos o Input de texto padrão */
-                                    <input
-                                        type="text"
-                                        placeholder={`Informe ${attr.name}`}
-                                        required
-                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: 'none', color: 'black' }}
-                                        onChange={e => setValoresAtributos({
-                                            ...valoresAtributos,
-                                            [attr.id]: e.target.value
-                                        })}
-                                    />
-                                )}
+                    <div style={{ backgroundColor: '#222', padding: '15px', borderRadius: '8px' }}>
+                        <h4 style={{ marginBottom: '10px', color: '#3483fa' }}>Ficha Técnica</h4>
+                        
+                        {/* Obrigatórios */}
+                        {atributosRequeridos.filter(a => a.ehObrigatorio).map(attr => (
+                            <div key={attr.id} style={{ marginBottom: '15px' }}>
+                                <label style={{ fontSize: '13px' }}>{attr.name} *</label>
+                                <RenderizarInput attr={attr} obrigatorio={true} />
                             </div>
                         ))}
+
+                        {/* Botão Opcionais */}
+                        <button 
+                            type="button"
+                            onClick={() => setMostrarOpcionais(!mostrarOpcionais)}
+                            style={{ background: 'none', color: '#3483fa', border: '1px solid #3483fa', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
+                        >
+                            {mostrarOpcionais ? "▲ Ocultar opcionais" : "▼ Ver opcionais"}
+                        </button>
+
+                        {/* Opcionais */}
+                        {mostrarOpcionais && (
+                            <div style={{ marginTop: '15px', borderTop: '1px solid #444', paddingTop: '10px' }}>
+                                {atributosRequeridos.filter(a => !a.ehObrigatorio).map(attr => (
+                                    <div key={attr.id} style={{ marginBottom: '15px' }}>
+                                        <label style={{ fontSize: '13px', color: '#ccc' }}>{attr.name}</label>
+                                        <RenderizarInput attr={attr} obrigatorio={false} />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
-                <input
-                    type="number" placeholder="Preço (Ex: 1500)" required
-                    onChange={e => setProduto({ ...produto, preco: e.target.value })}
-                    style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black' }}
-                />
-                <input
-                    type="number" placeholder="Quantidade em estoque" required
-                    onChange={e => setProduto({ ...produto, quantidade: e.target.value })}
-                    style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black' }}
-                />
-
-                <label>Condição</label>
-                <select
-                    onChange={e => setProduto({ ...produto, condicao: e.target.value })}
-                    style={{ padding: '8px', borderRadius: '4px' }}
-                >
-                    <option value="new">Novo</option>
-                    <option value="used">Usado</option>
-                </select>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label>URL da Imagem (Obrigatório)</label>
-                    <input
-                        type="url"
-                        placeholder="https://link-da-foto.jpg"
-                        required
-                        onChange={e => {
-                            setUrlImagem(e.target.value);
-                            setProduto({ ...produto, imagem: e.target.value });
-                        }}
-                        style={{ padding: '8px', borderRadius: '4px', color: 'black' }}
-                    />
-
-                    {urlImagem && (
-                        <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                            <p style={{ fontSize: '12px' }}>Prévia do anúncio:</p>
-                            <img
-                                src={urlImagem}
-                                alt="Preview"
-                                style={{ maxWidth: '150px', borderRadius: '8px', border: '2px solid #3483fa' }}
-                                onError={() => console.log("Link de imagem inválido")}
-                            />
-                        </div>
-                    )}
+                {/* Campos de Preço e Qtd */}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <input type="number" placeholder="Preço" required style={{ flex: 1, padding: '10px', color: 'black' }} onChange={e => setProduto({...produto, preco: e.target.value})} />
+                    <input type="number" placeholder="Qtd" required style={{ flex: 1, padding: '10px', color: 'black' }} onChange={e => setProduto({...produto, quantidade: e.target.value})} />
                 </div>
 
-                <button
-                    type="submit"
-                    disabled={!produto.categoria || carregandoCategoria}
-                    style={{
-                        padding: '12px',
-                        background: !produto.categoria ? '#555' : '#3483fa',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: !produto.categoria ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    {carregandoCategoria ? 'Processando...' : 'Publicar no Mercado Livre'}
-                </button>
+                {/* Imagem */}
+                <input 
+                    type="url" 
+                    placeholder="URL da Imagem" 
+                    required 
+                    onChange={e => { setUrlImagem(e.target.value); setProduto({...produto, imagem: e.target.value}); }} 
+                    style={{ padding: '10px', color: 'black' }} 
+                />
 
-                <button type="button" onClick={() => navigate('/dashboard')} style={{ background: 'transparent', color: '#888', border: 'none', cursor: 'pointer' }}>
-                    Cancelar
+                <button 
+                    type="submit" 
+                    disabled={carregandoCategoria}
+                    style={{ padding: '15px', backgroundColor: '#3483fa', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                    {carregandoCategoria ? "Aguarde..." : "Publicar Anúncio"}
                 </button>
             </form>
         </div>
