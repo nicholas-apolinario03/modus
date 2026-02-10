@@ -5,7 +5,7 @@ export default function NovoProduto() {
     const user = JSON.parse(localStorage.getItem('user'));
     const navigate = useNavigate();
     const [mostrarOpcionais, setMostrarOpcionais] = useState(false);
-    
+
     // Estados de Controle
     const [sugestao, setSugestao] = useState(null);
     const [carregandoCategoria, setCarregandoCategoria] = useState(false);
@@ -22,7 +22,16 @@ export default function NovoProduto() {
         imagem: ''
     });
 
-    // --- LÓGICA DE BUSCA ---
+    // Função de estilo para evitar repetição
+    const estiloInput = (obrigatorio) => ({
+        width: '100%',
+        padding: '10px',
+        borderRadius: '4px',
+        border: obrigatorio ? '1px solid #3483fa' : '1px solid #444',
+        backgroundColor: 'white',
+        color: 'black',
+        marginTop: '5px'
+    });
 
     const buscarRequisitos = async (catId) => {
         if (!user?.id) return;
@@ -60,8 +69,6 @@ export default function NovoProduto() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        // Filtra atributos vazios para não sujar o envio
         const atributosFormatados = Object.keys(valoresAtributos)
             .filter(key => valoresAtributos[key] !== "")
             .map(key => ({
@@ -92,50 +99,11 @@ export default function NovoProduto() {
         }
     };
 
-    // --- SUB-COMPONENTE INTERNO (Para acessar os estados) ---
-    const RenderizarInput = ({ attr, obrigatorio }) => {
-        const estilo = {
-            width: '100%',
-            padding: '10px',
-            borderRadius: '4px',
-            border: obrigatorio ? '1px solid #3483fa' : '1px solid #444',
-            backgroundColor: 'white',
-            color: 'black',
-            marginTop: '5px'
-        };
-
-        if (attr.values && attr.values.length > 0) {
-            return (
-                <select 
-                    required={obrigatorio}
-                    style={estilo}
-                    value={valoresAtributos[attr.id] || ""}
-                    onChange={e => setValoresAtributos({...valoresAtributos, [attr.id]: e.target.value})}
-                >
-                    <option value="">{obrigatorio ? "Selecione..." : "Não informado"}</option>
-                    {attr.values.map(v => <option key={v.id || v.name} value={v.name}>{v.name}</option>)}
-                </select>
-            );
-        }
-
-        return (
-            <input 
-                type="text"
-                required={obrigatorio}
-                placeholder={obrigatorio ? "Campo obrigatório" : "Ex: Branco, 110v..."}
-                style={estilo}
-                value={valoresAtributos[attr.id] || ""}
-                onChange={e => setValoresAtributos({...valoresAtributos, [attr.id]: e.target.value})}
-            />
-        );
-    };
-
     return (
         <div style={{ color: 'white', padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
             <h2>Anunciar Novo Produto</h2>
-            
+
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                {/* Título */}
                 <div>
                     <label>Título do Produto</label>
                     <input
@@ -148,21 +116,38 @@ export default function NovoProduto() {
                     {sugestao && <p style={{ color: '#00a650', fontSize: '12px' }}>✅ Categoria: {sugestao}</p>}
                 </div>
 
-                {/* Ficha Técnica Dinâmica */}
                 {atributosRequeridos.length > 0 && (
                     <div style={{ backgroundColor: '#222', padding: '15px', borderRadius: '8px' }}>
                         <h4 style={{ marginBottom: '10px', color: '#3483fa' }}>Ficha Técnica</h4>
-                        
-                        {/* Obrigatórios */}
+
+                        {/* Campos Obrigatórios Renderizados Direto */}
                         {atributosRequeridos.filter(a => a.ehObrigatorio).map(attr => (
                             <div key={attr.id} style={{ marginBottom: '15px' }}>
                                 <label style={{ fontSize: '13px' }}>{attr.name} *</label>
-                                <RenderizarInput attr={attr} obrigatorio={true} />
+                                {attr.values && attr.values.length > 0 ? (
+                                    <select
+                                        required
+                                        style={estiloInput(true)}
+                                        value={valoresAtributos[attr.id] || ""}
+                                        onChange={e => setValoresAtributos({ ...valoresAtributos, [attr.id]: e.target.value })}
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {attr.values.map(v => <option key={v.id || v.name} value={v.name}>{v.name}</option>)}
+                                    </select>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="Campo obrigatório"
+                                        style={estiloInput(true)}
+                                        value={valoresAtributos[attr.id] || ""}
+                                        onChange={e => setValoresAtributos({ ...valoresAtributos, [attr.id]: e.target.value })}
+                                    />
+                                )}
                             </div>
                         ))}
 
-                        {/* Botão Opcionais */}
-                        <button 
+                        <button
                             type="button"
                             onClick={() => setMostrarOpcionais(!mostrarOpcionais)}
                             style={{ background: 'none', color: '#3483fa', border: '1px solid #3483fa', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
@@ -170,13 +155,30 @@ export default function NovoProduto() {
                             {mostrarOpcionais ? "▲ Ocultar opcionais" : "▼ Ver opcionais"}
                         </button>
 
-                        {/* Opcionais */}
+                        {/* Campos Opcionais Renderizados Direto */}
                         {mostrarOpcionais && (
                             <div style={{ marginTop: '15px', borderTop: '1px solid #444', paddingTop: '10px' }}>
                                 {atributosRequeridos.filter(a => !a.ehObrigatorio).map(attr => (
                                     <div key={attr.id} style={{ marginBottom: '15px' }}>
                                         <label style={{ fontSize: '13px', color: '#ccc' }}>{attr.name}</label>
-                                        <RenderizarInput attr={attr} obrigatorio={false} />
+                                        {attr.values && attr.values.length > 0 ? (
+                                            <select
+                                                style={estiloInput(false)}
+                                                value={valoresAtributos[attr.id] || ""}
+                                                onChange={e => setValoresAtributos({ ...valoresAtributos, [attr.id]: e.target.value })}
+                                            >
+                                                <option value="">Não informado</option>
+                                                {attr.values.map(v => <option key={v.id || v.name} value={v.name}>{v.name}</option>)}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                placeholder="Ex: Branco, 110v..."
+                                                style={estiloInput(false)}
+                                                value={valoresAtributos[attr.id] || ""}
+                                                onChange={e => setValoresAtributos({ ...valoresAtributos, [attr.id]: e.target.value })}
+                                            />
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -184,23 +186,21 @@ export default function NovoProduto() {
                     </div>
                 )}
 
-                {/* Campos de Preço e Qtd */}
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <input type="number" placeholder="Preço" required style={{ flex: 1, padding: '10px', color: 'black' }} onChange={e => setProduto({...produto, preco: e.target.value})} />
-                    <input type="number" placeholder="Qtd" required style={{ flex: 1, padding: '10px', color: 'black' }} onChange={e => setProduto({...produto, quantidade: e.target.value})} />
+                    <input type="number" placeholder="Preço" required style={{ flex: 1, padding: '10px', color: 'black' }} onChange={e => setProduto({ ...produto, preco: e.target.value })} />
+                    <input type="number" placeholder="Qtd" required style={{ flex: 1, padding: '10px', color: 'black' }} onChange={e => setProduto({ ...produto, quantidade: e.target.value })} />
                 </div>
 
-                {/* Imagem */}
-                <input 
-                    type="url" 
-                    placeholder="URL da Imagem" 
-                    required 
-                    onChange={e => { setUrlImagem(e.target.value); setProduto({...produto, imagem: e.target.value}); }} 
-                    style={{ padding: '10px', color: 'black' }} 
+                <input
+                    type="url"
+                    placeholder="URL da Imagem"
+                    required
+                    onChange={e => { setUrlImagem(e.target.value); setProduto({ ...produto, imagem: e.target.value }); }}
+                    style={{ padding: '10px', color: 'black' }}
                 />
 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     disabled={carregandoCategoria}
                     style={{ padding: '15px', backgroundColor: '#3483fa', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
