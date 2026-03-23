@@ -1,54 +1,76 @@
 import axios from 'axios';
 import { garantirTokenValido } from './utils/refresh-ml.js';
-import { db } from './bd.js'; // Importe o banco aqui
+import { db } from './bd.js'; 
 
 export default async function handler(req, res) {
-    const { usuarioId } = req.query;
+    // Pega o usuarioId de onde ele vier (Query no GET, Body no POST)
+    const usuarioId = req.method === 'GET' ? req.query.usuarioId : req.body.usuarioId;
+
+    if (!usuarioId) return res.status(400).json({ error: "usuarioId é obrigatório" });
 
     try {
         const accessToken = await garantirTokenValido(usuarioId);
 
-        // 1. Buscar o ID do Mercado Livre (user_id_ml) que salvamos na tabela
-        const result = await db.query('SELECT user_id_ml FROM tokens_ml WHERE usuario_id = $1', [usuarioId]);
-        const userIdMl = result.rows[0]?.user_id_ml;
+        // --- LÓGICA DE LISTAGEM (GET) ---
+        if (req.method === 'GET') {
+            const result = await db.query('SELECT user_id_ml FROM tokens_ml WHERE usuario_id = $1', [usuarioId]);
+            const userIdMl = result.rows[0]?.user_id_ml;
 
-        if (!userIdMl) {
-            return res.status(400).json({ error: "ID do Mercado Livre não encontrado no banco." });
+            if (!userIdMl) return res.status(400).json({ error: "ID do ML não encontrado." });
+
+            const buscaIds = await axios.get(`https://api.mercadolibre.com/users/${userIdMl}/items/search`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+
+            const ids = buscaIds.data.results;
+            if (!ids || ids.length === 0) return res.status(200).json([]);
+
+            const idsString = ids.slice(0, 20).join(',');
+            const detalhes = await axios.get(`https://api.mercadolibre.com/items?ids=${idsString}`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+
+            const produtosFormatados = detalhes.data.map(item => ({
+                id: item.body.id,
+                titulo: item.body.title,
+                preco: item.body.price,
+                status: item.body.status, 
+                sub_status: item.body.sub_status,
+                imagem: item.body.thumbnail,
+                link: item.body.permalink
+            }));
+
+            return res.status(200).json(produtosFormatados);
         }
 
-        // 2. Usar o ID numérico diretamente na URL em vez de "me"
-        const buscaIds = await axios.get(`https://api.mercadolibre.com/users/${userIdMl}/items/search`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
+        // --- LÓGICA DE AÇÕES (POST) ---
+        if (req.method === 'POST') {
+            const { id, novoStatus } = req.body;
+            
+            // O status 'deleted' no ML exige que o item esteja 'closed' primeiro
+            const statusParaML = novoStatus === 'deleted' ? 'closed' : novoStatus;
 
-        const ids = buscaIds.data.results;
+            // 1. Atualiza o status (Pausar ou Fechar para deletar)
+            await axios.put(`https://api.mercadolibre.com/items/${id}`, 
+                { status: statusParaML },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
 
-        if (!ids || ids.length === 0) {
-            return res.status(200).json([]); // Retorna vazio se não houver anúncios
+            // 2. Se a intenção era deletar, envia o comando final
+            if (novoStatus === 'deleted') {
+                await axios.put(`https://api.mercadolibre.com/items/${id}`, 
+                    { deleted: 'true' },
+                    { headers: { Authorization: `Bearer ${accessToken}` } }
+                );
+            }
+
+            return res.status(200).json({ success: true });
         }
 
-        // Pegue no máximo 10 para testar e garanta que virou uma string limpa
-        const idsString = ids.slice(0, 10).join(',');
-        const detalhes = await axios.get(`https://api.mercadolibre.com/items?ids=${idsString}`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
-
-        // O ML retorna um array de objetos com { code: 200, body: { ... } }
-        const produtosFormatados = detalhes.data.map(item => ({
-            id: item.body.id,
-            titulo: item.body.title,
-            preco: item.body.price,
-            status: item.body.status, 
-            sub_status: item.body.sub_status,
-            imagem: item.body.thumbnail,
-            link: item.body.permalink
-        }));
-
-        res.status(200).json(produtosFormatados);
+        return res.status(405).json({ error: "Método não permitido" });
 
     } catch (error) {
-        // Isso vai mostrar o motivo real no log da Vercel (ex: "invalid_token")
-        console.error("Detalhes do erro no ML:", error.response?.data);
-        res.status(500).json({ error: "Erro ao carregar produtos" });
+        console.error("Erro no ML:", error.response?.data || error.message);
+        res.status(500).json({ error: "Erro na operação com Mercado Livre" });
     }
 }
