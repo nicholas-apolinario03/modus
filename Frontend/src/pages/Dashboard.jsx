@@ -53,34 +53,26 @@ export default function Dashboard() {
         }
     }, [temVinculoML]);
     const alterarStatus = async (produtoId, novoStatus) => {
-        const confirmacao = novoStatus === 'deleted'
-            ? window.confirm("Tem certeza que deseja excluir este anúncio?")
-            : true;
+    if (novoStatus === 'deleted' && !window.confirm("Deseja excluir permanentemente?")) return;
 
-        if (!confirmacao) return;
+    try {
+        const res = await fetch(`/api/meus-produtos`, { // Rota unificada
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: produtoId,
+                novoStatus: novoStatus,
+                usuarioId: user.id
+            })
+        });
 
-        try {
-            const res = await fetch('/api/status-produto', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: produtoId,
-                    novoStatus: novoStatus,
-                    usuarioId: user.id
-                })
-            });
-
-            if (res.ok) {
-                alert(`Sucesso: Anúncio ${novoStatus === 'paused' ? 'pausado' : 'excluído'}!`);
-                // Recarrega a lista para atualizar a tela
-                fetchProdutos();
-            } else {
-                alert("Erro ao alterar status.");
-            }
-        } catch (err) {
-            console.error("Erro:", err);
+        if (res.ok) {
+            carregarProdutos(); // Recarrega a lista usando o GET da mesma rota
         }
-    };
+    } catch (err) {
+        console.error("Erro ao atualizar status:", err);
+    }
+};
     const carregarProdutos = async () => {
         try {
             const res = await fetch(`/api/meus-produtos?usuarioId=${user.id}`);
