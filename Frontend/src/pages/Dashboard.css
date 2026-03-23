@@ -1,0 +1,187 @@
+/* Container Principal */
+.dashboard-container {
+    padding: 20px;
+    color: white;
+    background-color: #121212;
+    min-height: 100vh;
+}
+
+/* Cabeçalho */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-logout {
+    background: #f5222d;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-logout:hover {
+    opacity: 0.8;
+}
+
+/* Divisores e Seções */
+.divider {
+    border: 0.5px solid #333;
+    margin: 20px 0;
+}
+
+.ml-connection-status {
+    margin-bottom: 30px;
+}
+
+/* Alertas de Vinculação */
+.alert-not-linked {
+    background: #332b00;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ffd666;
+}
+
+.btn-link-ml {
+    background: #3483fa;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+/* Grid de Produtos */
+.products-section-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.btn-new-product {
+    background: #3483fa;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+/* Card de Produto */
+.product-card {
+    background-color: #1e1e1e;
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid #333;
+}
+
+.product-info-top {
+    text-align: center;
+}
+
+.product-image {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.product-title {
+    font-size: 14px;
+    margin-bottom: 8px;
+    height: 40px;
+    overflow: hidden;
+}
+
+.product-price {
+    font-weight: bold;
+    font-size: 18px;
+    color: #fff;
+}
+
+/* Status e Tags */
+.status-badge-container {
+    margin: 10px 0;
+}
+
+.status-badge {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.sub-status-text {
+    color: #ff4d4d;
+    font-size: 10px;
+    margin-top: 5px;
+}
+
+/* Ações do Card */
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.link-ml-external {
+    text-align: center;
+    font-size: 12px;
+    color: #3483fa;
+    text-decoration: none;
+}
+
+.button-group {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.btn-edit {
+    flex: 1;
+    padding: 8px;
+    cursor: pointer;
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.btn-toggle-status {
+    flex: 1;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-delete {
+    width: 100%;
+    background-color: #331111;
+    color: #ff4d4d;
+    border: 1px solid #4d1111;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 5px;
+}

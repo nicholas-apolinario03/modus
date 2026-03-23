@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
+import './Dashboard.css';
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -120,22 +121,21 @@ export default function Dashboard() {
     };
 
     return (
-        <div style={{ padding: '20px', color: 'white', backgroundColor: '#121212', minHeight: '100vh' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+       <div className="dashboard-container">
+            <div className="dashboard-header">
                 <h1>Olá, {user?.nome}!</h1>
-                <button onClick={handleLogout} style={{ background: '#f5222d', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer' }}>Sair</button>
+                <button onClick={handleLogout} className="btn-logout">Sair</button>
             </div>
 
-            <hr style={{ border: '0.5px solid #333', margin: '20px 0' }} />
+            <hr className="divider" />
 
-            <div style={{ marginBottom: '30px' }}>
+            <div className="ml-connection-status">
                 {carregandoML ? (
                     <p>Verificando conexão...</p>
                 ) : !temVinculoML ? (
-                    <div style={{ background: '#332b00', padding: '15px', borderRadius: '8px', border: '1px solid #ffd666' }}>
+                    <div className="alert-not-linked">
                         <p style={{ color: '#ffd666', marginBottom: '10px' }}>⚠️ Conta não vinculada ao Mercado Livre.</p>
-                        <a href="https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=3704242181199025&redirect_uri=https://modus-three.vercel.app/dashboard"
-                            style={{ background: '#3483fa', color: 'white', padding: '10px 20px', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' }}>
+                        <a href="https://auth.mercadolivre.com.br/authorization?..." className="btn-link-ml">
                             Vincular Agora
                         </a>
                     </div>
@@ -145,49 +145,50 @@ export default function Dashboard() {
             </div>
 
             <div className="lista-produtos">
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <div className="products-section-header">
                     <h3>Seus Anúncios</h3>
-                    <Link to='/novo-produto' style={{ background: '#3483fa', color: 'white', padding: '10px 20px', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold' }}>+ Novo Anúncio</Link>
+                    <Link to='/novo-produto' className="btn-new-product">+ Novo Anúncio</Link>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
+                <div className="products-grid">
                     {produtos.map(prod => {
                         const statusInfo = traduzirStatus(prod.status);
                         return (
-                            <div key={prod.id} style={{ backgroundColor: '#1e1e1e', padding: '15px', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid #333' }}>
-                                <div style={{ textAlign: 'center' }}>
-                                    <img src={prod.imagem} alt={prod.titulo} style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '10px', borderRadius: '4px' }} />
-                                    <h4 style={{ fontSize: '14px', marginBottom: '8px', height: '40px', overflow: 'hidden' }}>{prod.titulo}</h4>
-                                    <p style={{ fontWeight: 'bold', fontSize: '18px', color: '#fff' }}>R$ {prod.preco}</p>
+                            <div key={prod.id} className="product-card">
+                                <div className="product-info-top">
+                                    <img src={prod.imagem} alt={prod.titulo} className="product-image" />
+                                    <h4 className="product-title">{prod.titulo}</h4>
+                                    <p className="product-price">R$ {prod.preco}</p>
 
-                                    <div style={{ margin: '10px 0' }}>
-                                        <span style={{ backgroundColor: statusInfo.bg, color: statusInfo.color, padding: '3px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>
+                                    <div className="status-badge-container">
+                                        <span 
+                                            className="status-badge"
+                                            style={{ backgroundColor: statusInfo.bg, color: statusInfo.color }}
+                                        >
                                             {statusInfo.label}
                                         </span>
                                         {prod.sub_status && prod.sub_status.length > 0 && (
-                                            <p style={{ color: '#ff4d4d', fontSize: '10px', marginTop: '5px' }}>
+                                            <p className="sub-status-text">
                                                 {traduzirSubStatus(prod.sub_status[0])}
                                             </p>
                                         )}
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '15px' }}>
-                                    <a href={prod.link} target="_blank" rel="noreferrer" style={{ textAlign: 'center', fontSize: '12px', color: '#3483fa', textDecoration: 'none' }}>Ver no ML</a>
-                                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                                        <button onClick={() => navigate(`/editar-produto/${prod.id}`)} style={{ flex: 1, padding: '8px', cursor: 'pointer', background: '#444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px' }}>Editar</button>
+                                <div className="product-actions">
+                                    <a href={prod.link} target="_blank" rel="noreferrer" className="link-ml-external">Ver no ML</a>
+                                    <div className="button-group">
+                                        <button onClick={() => navigate(`/editar-produto/${prod.id}`)} className="btn-edit">Editar</button>
                                         
                                         <button
                                             onClick={() => alterarStatus(prod.id, prod.status === 'active' ? 'paused' : 'active')}
-                                            style={{ flex: 1, backgroundColor: prod.status === 'active' ? '#ffad5c' : '#00a650', color: 'white', border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                                            className="btn-toggle-status"
+                                            style={{ backgroundColor: prod.status === 'active' ? '#ffad5c' : '#00a650', color: 'white' }}
                                         >
                                             {prod.status === 'active' ? 'Pausar' : 'Reativar'}
                                         </button>
 
-                                        <button
-                                            onClick={() => alterarStatus(prod.id, 'deleted')}
-                                            style={{ width: '100%', backgroundColor: '#331111', color: '#ff4d4d', border: '1px solid #4d1111', padding: '8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', marginTop: '5px' }}
-                                        >
+                                        <button onClick={() => alterarStatus(prod.id, 'deleted')} className="btn-delete">
                                             Excluir
                                         </button>
                                     </div>
