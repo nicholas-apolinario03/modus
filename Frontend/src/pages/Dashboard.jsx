@@ -121,11 +121,12 @@ export default function Dashboard() {
     };
 
     return (
-       <div className="dashboard-container">
-            <div className="dashboard-header">
-                <h1>Olá, {user?.nome}!</h1>
-                <button onClick={handleLogout} className="btn-logout">Sair</button>
-            </div>
+        
+       <body className="dashboard-container">
+        <header className="dashboard-header">
+            <h1>Olá, {user?.nome}!</h1>
+            <button onClick={handleLogout} className="btn-logout">Sair</button>
+        </header>
 
             <hr className="divider" />
 
@@ -199,6 +200,6 @@ export default function Dashboard() {
                 </div>
                 {produtos.length === 0 && !carregandoML && <p style={{ color: '#666' }}>Nenhum anúncio encontrado.</p>}
             </div>
-        </div>
+        </body>
     );
 }
