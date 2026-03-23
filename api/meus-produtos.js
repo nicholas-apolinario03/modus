@@ -2,25 +2,34 @@ import axios from 'axios';
 import { garantirTokenValido } from '../utils/refresh-ml.js';
 
 export default async function handler(req, res) {
-    const { usuarioId } = req.query; // Para o GET
-    const { id, novoStatus, usuarioId: bodyUserId } = req.body; // Para o POST
+    // Pega o usuarioId dependendo do tipo de requisição
+    const usuarioId = req.method === 'GET' ? req.query.usuarioId : req.body.usuarioId;
 
-    const userId = usuarioId || bodyUserId;
-
-    if (!userId) return res.status(400).json({ error: "usuarioId é obrigatório" });
+    if (!usuarioId) {
+        return res.status(400).json({ error: "usuarioId é obrigatório" });
+    }
 
     try {
-        const accessToken = await garantirTokenValido(userId);
+        const accessToken = await garantirTokenValido(usuarioId);
 
-        // --- LÓGICA DE LISTAGEM (GET) ---
+        // --- LÓGICA PARA LISTAR (GET) ---
         if (req.method === 'GET') {
-            const searchRes = await axios.get(`https://api.mercadolibre.com/users/me/items/search`, {
+            // Busca o seller_id do usuário logado
+            const userRes = await axios.get(`https://api.mercadolibre.com/users/me`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            const sellerId = userRes.data.id;
+
+            // Busca os IDs dos anúncios
+            const searchRes = await axios.get(`https://api.mercadolibre.com/users/${sellerId}/items/search`, {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
 
-            if (!searchRes.data.results.length) return res.status(200).json([]);
+            const ids = searchRes.data.results;
+            if (!ids || ids.length === 0) return res.status(200).json([]);
 
-            const detailsRes = await axios.get(`https://api.mercadolibre.com/items?ids=${searchRes.data.results.join(',')}`, {
+            // Busca os detalhes (limite de 20 por vez na API do ML)
+            const detailsRes = await axios.get(`https://api.mercadolibre.com/items?ids=${ids.slice(0, 20).join(',')}`, {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
 
@@ -37,17 +46,23 @@ export default async function handler(req, res) {
             return res.status(200).json(produtos);
         }
 
-        // --- LÓGICA DE ALTERAR STATUS (POST/PUT) ---
+        // --- LÓGICA PARA STATUS (POST) ---
         if (req.method === 'POST') {
+            const { id, novoStatus } = req.body;
+            
+            if (!id || !novoStatus) {
+                return res.status(400).json({ error: "ID e novoStatus são necessários" });
+            }
+
             const statusParaML = novoStatus === 'deleted' ? 'closed' : novoStatus;
 
-            // Passo 1: Mudar status (fechar ou pausar)
+            // Atualiza status básico
             await axios.put(`https://api.mercadolibre.com/items/${id}`, 
                 { status: statusParaML },
                 { headers: { Authorization: `Bearer ${accessToken}` } }
             );
 
-            // Passo 2: Se for exclusão, deletar de fato
+            // Se for exclusão, envia a flag de deletado
             if (novoStatus === 'deleted') {
                 await axios.put(`https://api.mercadolibre.com/items/${id}`, 
                     { deleted: 'true' },
@@ -62,6 +77,10 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error("Erro na API de produtos:", error.response?.data || error.message);
-        res.status(500).json({ error: "Erro interno no servidor" });
+        // Retorna o erro detalhado para ajudar no seu TCC
+        return res.status(500).json({ 
+            error: "Falha na comunicação com Mercado Livre",
+            detalhes: error.response?.data || error.message 
+        });
     }
 }
