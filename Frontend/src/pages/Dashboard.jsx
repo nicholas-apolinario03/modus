@@ -10,7 +10,7 @@ export default function Dashboard() {
     const [carregandoML, setCarregandoML] = useState(true);
     const [produtos, setProdutos] = useState([]);
 
-    // --- FUNÇÕES DE TRADUÇÃO E ESTILO ---
+    // --- FUNÇÕES DE APOIO ---
     const traduzirStatus = (status) => {
         const tipos = {
             'active': { label: 'Ativo', color: '#00a650', bg: '#e6f6ef' },
@@ -32,47 +32,6 @@ export default function Dashboard() {
     };
 
     // --- LÓGICA DE DADOS ---
-    useEffect(() => {
-        if (!token || !user) {
-            navigate('/login');
-            return;
-        }
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-
-        if (code) {
-            enviarCodeParaBackend(code);
-        } else {
-            verificarStatusML();
-        }
-    }, []);
-
-    useEffect(() => {
-        if (temVinculoML && user?.id) {
-            carregarProdutos();
-        }
-    }, [temVinculoML]);
-    const alterarStatus = async (produtoId, novoStatus) => {
-    if (novoStatus === 'deleted' && !window.confirm("Deseja excluir permanentemente?")) return;
-
-    try {
-        const res = await fetch(`/api/meus-produtos`, { // Rota unificada
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: produtoId,
-                novoStatus: novoStatus,
-                usuarioId: user.id
-            })
-        });
-
-        if (res.ok) {
-            carregarProdutos(); // Recarrega a lista usando o GET da mesma rota
-        }
-    } catch (err) {
-        console.error("Erro ao atualizar status:", err);
-    }
-};
     const carregarProdutos = async () => {
         try {
             const res = await fetch(`/api/meus-produtos?usuarioId=${user.id}`);
@@ -81,6 +40,28 @@ export default function Dashboard() {
         } catch (err) {
             console.error("Erro ao carregar produtos:", err);
             setProdutos([]);
+        }
+    };
+
+    const alterarStatus = async (produtoId, novoStatus) => {
+        if (novoStatus === 'deleted' && !window.confirm("Deseja excluir permanentemente?")) return;
+
+        try {
+            const res = await fetch(`/api/meus-produtos`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: produtoId,
+                    novoStatus: novoStatus,
+                    usuarioId: user.id
+                })
+            });
+
+            if (res.ok) {
+                carregarProdutos(); 
+            }
+        } catch (err) {
+            console.error("Erro ao atualizar status:", err);
         }
     };
 
@@ -112,6 +93,27 @@ export default function Dashboard() {
         }
     };
 
+    useEffect(() => {
+        if (!token || !user) {
+            navigate('/login');
+            return;
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        if (code) {
+            enviarCodeParaBackend(code);
+        } else {
+            verificarStatusML();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (temVinculoML && user?.id) {
+            carregarProdutos();
+        }
+    }, [temVinculoML]);
+
     const handleLogout = () => {
         localStorage.clear();
         navigate('/login');
@@ -126,7 +128,6 @@ export default function Dashboard() {
 
             <hr style={{ border: '0.5px solid #333', margin: '20px 0' }} />
 
-            {/* Status da Conexão ML */}
             <div style={{ marginBottom: '30px' }}>
                 {carregandoML ? (
                     <p>Verificando conexão...</p>
@@ -143,7 +144,6 @@ export default function Dashboard() {
                 )}
             </div>
 
-            {/* Listagem de Anúncios */}
             <div className="lista-produtos">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                     <h3>Seus Anúncios</h3>
@@ -160,7 +160,6 @@ export default function Dashboard() {
                                     <h4 style={{ fontSize: '14px', marginBottom: '8px', height: '40px', overflow: 'hidden' }}>{prod.titulo}</h4>
                                     <p style={{ fontWeight: 'bold', fontSize: '18px', color: '#fff' }}>R$ {prod.preco}</p>
 
-                                    {/* Tag de Status */}
                                     <div style={{ margin: '10px 0' }}>
                                         <span style={{ backgroundColor: statusInfo.bg, color: statusInfo.color, padding: '3px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>
                                             {statusInfo.label}
@@ -175,19 +174,19 @@ export default function Dashboard() {
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '15px' }}>
                                     <a href={prod.link} target="_blank" rel="noreferrer" style={{ textAlign: 'center', fontSize: '12px', color: '#3483fa', textDecoration: 'none' }}>Ver no ML</a>
-                                    <div style={{ display: 'flex', gap: '5px' }}>
-                                        <button onClick={() => navigate(`/editar-produto/${prod.id}`)} style={{ flex: 1, padding: '6px', cursor: 'pointer', background: '#444', color: 'white', border: 'none', borderRadius: '4px' }}>Editar</button>
+                                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                                        <button onClick={() => navigate(`/editar-produto/${prod.id}`)} style={{ flex: 1, padding: '8px', cursor: 'pointer', background: '#444', color: 'white', border: 'none', borderRadius: '4px', fontSize: '12px' }}>Editar</button>
+                                        
                                         <button
-                                            onClick={() => alterarStatus(p.id, p.status === 'active' ? 'paused' : 'active')}
-                                            style={{ backgroundColor: p.status === 'active' ? '#ffad5c' : '#00a650', color: 'white', margin: '0 5px' }}
+                                            onClick={() => alterarStatus(prod.id, prod.status === 'active' ? 'paused' : 'active')}
+                                            style={{ flex: 1, backgroundColor: prod.status === 'active' ? '#ffad5c' : '#00a650', color: 'white', border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
                                         >
-                                            {p.status === 'active' ? 'Pausar' : 'Reativar'}
+                                            {prod.status === 'active' ? 'Pausar' : 'Reativar'}
                                         </button>
 
-                                        {/* Botão Excluir */}
                                         <button
-                                            onClick={() => alterarStatus(p.id, 'deleted')}
-                                            style={{ backgroundColor: '#ff4d4d', color: 'white' }}
+                                            onClick={() => alterarStatus(prod.id, 'deleted')}
+                                            style={{ width: '100%', backgroundColor: '#331111', color: '#ff4d4d', border: '1px solid #4d1111', padding: '8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', marginTop: '5px' }}
                                         >
                                             Excluir
                                         </button>
