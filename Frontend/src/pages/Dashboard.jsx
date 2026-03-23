@@ -52,7 +52,35 @@ export default function Dashboard() {
             carregarProdutos();
         }
     }, [temVinculoML]);
+    const alterarStatus = async (produtoId, novoStatus) => {
+        const confirmacao = novoStatus === 'deleted'
+            ? window.confirm("Tem certeza que deseja excluir este anúncio?")
+            : true;
 
+        if (!confirmacao) return;
+
+        try {
+            const res = await fetch('/api/status-produto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: produtoId,
+                    novoStatus: novoStatus,
+                    usuarioId: user.id
+                })
+            });
+
+            if (res.ok) {
+                alert(`Sucesso: Anúncio ${novoStatus === 'paused' ? 'pausado' : 'excluído'}!`);
+                // Recarrega a lista para atualizar a tela
+                fetchProdutos();
+            } else {
+                alert("Erro ao alterar status.");
+            }
+        } catch (err) {
+            console.error("Erro:", err);
+        }
+    };
     const carregarProdutos = async () => {
         try {
             const res = await fetch(`/api/meus-produtos?usuarioId=${user.id}`);
@@ -103,7 +131,7 @@ export default function Dashboard() {
                 <h1>Olá, {user?.nome}!</h1>
                 <button onClick={handleLogout} style={{ background: '#f5222d', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer' }}>Sair</button>
             </div>
-            
+
             <hr style={{ border: '0.5px solid #333', margin: '20px 0' }} />
 
             {/* Status da Conexão ML */}
@@ -113,8 +141,8 @@ export default function Dashboard() {
                 ) : !temVinculoML ? (
                     <div style={{ background: '#332b00', padding: '15px', borderRadius: '8px', border: '1px solid #ffd666' }}>
                         <p style={{ color: '#ffd666', marginBottom: '10px' }}>⚠️ Conta não vinculada ao Mercado Livre.</p>
-                        <a href="https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=3704242181199025&redirect_uri=https://modus-three.vercel.app/dashboard" 
-                           style={{ background: '#3483fa', color: 'white', padding: '10px 20px', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' }}>
+                        <a href="https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=3704242181199025&redirect_uri=https://modus-three.vercel.app/dashboard"
+                            style={{ background: '#3483fa', color: 'white', padding: '10px 20px', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' }}>
                             Vincular Agora
                         </a>
                     </div>
@@ -139,7 +167,7 @@ export default function Dashboard() {
                                     <img src={prod.imagem} alt={prod.titulo} style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '10px', borderRadius: '4px' }} />
                                     <h4 style={{ fontSize: '14px', marginBottom: '8px', height: '40px', overflow: 'hidden' }}>{prod.titulo}</h4>
                                     <p style={{ fontWeight: 'bold', fontSize: '18px', color: '#fff' }}>R$ {prod.preco}</p>
-                                    
+
                                     {/* Tag de Status */}
                                     <div style={{ margin: '10px 0' }}>
                                         <span style={{ backgroundColor: statusInfo.bg, color: statusInfo.color, padding: '3px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>
@@ -157,7 +185,20 @@ export default function Dashboard() {
                                     <a href={prod.link} target="_blank" rel="noreferrer" style={{ textAlign: 'center', fontSize: '12px', color: '#3483fa', textDecoration: 'none' }}>Ver no ML</a>
                                     <div style={{ display: 'flex', gap: '5px' }}>
                                         <button onClick={() => navigate(`/editar-produto/${prod.id}`)} style={{ flex: 1, padding: '6px', cursor: 'pointer', background: '#444', color: 'white', border: 'none', borderRadius: '4px' }}>Editar</button>
-                                        <button style={{ flex: 1, padding: '6px', cursor: 'pointer', background: '#331111', color: '#ff4d4f', border: '1px solid #331111', borderRadius: '4px' }}>Excluir</button>
+                                        <button
+                                            onClick={() => alterarStatus(p.id, p.status === 'active' ? 'paused' : 'active')}
+                                            style={{ backgroundColor: p.status === 'active' ? '#ffad5c' : '#00a650', color: 'white', margin: '0 5px' }}
+                                        >
+                                            {p.status === 'active' ? 'Pausar' : 'Reativar'}
+                                        </button>
+
+                                        {/* Botão Excluir */}
+                                        <button
+                                            onClick={() => alterarStatus(p.id, 'deleted')}
+                                            style={{ backgroundColor: '#ff4d4d', color: 'white' }}
+                                        >
+                                            Excluir
+                                        </button>
                                     </div>
                                 </div>
                             </div>
