@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { garantirTokenValido } from './utils/refresh-ml.js';
+import { garantirTokenValido } from '../utils/refresh-ml.js';
 
 export default async function handler(req, res) {
     const { usuarioId } = req.query; // Para o GET
